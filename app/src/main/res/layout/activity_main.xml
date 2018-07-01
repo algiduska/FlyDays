@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc">
+
+    <!-- The primary full-screen view. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <AutoCompleteTextView
+            android:id="@+id/location_from"
+            android:inputType="text"
+            android:hint="@string/departure_loc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp" />
+
+        <AutoCompleteTextView
+            android:id="@+id/location_to"
+            android:inputType="text"
+            android:hint="@string/holiday_loc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            />
+
+        <!-- will become departure range (CalendarView - how to make it smaller?) -->
+        <EditText
+            android:id="@+id/departure_date"
+            android:inputType="date"
+            android:hint="@string/dep_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp" />
+
+        <!-- will become days in destination with little info that it's calculated based on dep date -->
+        <EditText
+            android:id="@+id/return_date"
+            android:inputType="date"
+            android:hint="@string/return_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp" />
+
+        <CheckBox
+            android:id="@+id/direct_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:text="@string/direct_only"/>
+
+
+    </LinearLayout>
+
+
+    <Button
+        android:id="@+id/search_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/search_button"
+        android:background="@color/colorPrimary"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>

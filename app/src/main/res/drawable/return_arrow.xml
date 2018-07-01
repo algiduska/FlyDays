@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="line" >
+    <size
+        android:height="100dp" />
+    <solid
+        android:color="@android:color/black" />
+    <stroke
+        android:width="2dp"  />
+</shape>
+
+    <!-- https://stackoverflow.com/questions/26143905/android-make-an-arrow-shape-with-xml/26162158
+    for how to make an arrow -->
