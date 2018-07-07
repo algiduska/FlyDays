@@ -19,25 +19,31 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
-public final class FlightQueryUtils {
+public final class LocationQueryUtils {
     /**
-     * Create a private constructor because no one should ever create a {@link FlightQueryUtils} object.
+     * Create a private constructor because no one should ever create a {@link LocationQueryUtils} object.
      * This class is only meant to hold static variables and methods, which can be accessed
-     * directly from the class name FlightQueryUtils (and an object instance of FlightQueryUtils is not needed).
+     * directly from the class name LocationQueryUtils (and an object instance of FlightQueryUtils is not needed).
      */
-    private FlightQueryUtils() {
+    private LocationQueryUtils() {
     }
 
-    private static final String LOG_TAG = FlightQueryUtils.class.getName();
+    private static final String LOG_TAG = LocationQueryUtils.class.getName();
+
+
 
 
     /**
      * Query the kiwi flight info and return a list of {@link Trip} objects.
      */
-    public static List<Trip> fetchTripData(String requestUrl) {
+    public static Location fetchLocationData(String requestUrl) {
         /* for testing whether the progressBar works the thread goes to sleep for 2000ms
         try {
             Thread.sleep(2000);
@@ -50,19 +56,21 @@ public final class FlightQueryUtils {
         URL url = createUrl(requestUrl);
 
         // Perform HTTP request to the URL and receive a JSON response back
-        String jsonResponse = null;
+        String jsonLocations = null;
         try {
-            jsonResponse = makeHttpRequest(url);
-            Log.e(LOG_TAG, "FlightQueryUtils made Http request");
+            jsonLocations = makeHttpRequest(url);
+            Log.e(LOG_TAG, "LocationQueryUtils made Http request");
         } catch (IOException e) {
             Log.e(LOG_TAG, "Problem making the HTTP request.", e);
         }
 
         // Extract relevant fields from the JSON response and create a list of {@link Trip}s
-        List<Trip> trips = extractFeatureFromJson(jsonResponse);
+        Location locsAvailable = extractLocsFromJson(jsonLocations);
+        Log.e(LOG_TAG, "LocationQueryUtils makeHTTP request extracted locations");
 
-        // Return the list of {@link Trip}s
-        return trips;
+        // Return the list of {@link Location}s
+        Log.e(LOG_TAG, "LocationQueryUtils Http request returns locsAvailable");
+        return locsAvailable;
     }
 
     /**
@@ -83,11 +91,11 @@ public final class FlightQueryUtils {
      * Make an HTTP request to the given URL and return a String as the response.
      */
     private static String makeHttpRequest(URL url) throws IOException {
-        String jsonResponse = "";
+        String jsonLocations = "";
 
         // If the URL is null, then return early.
         if (url == null) {
-            return jsonResponse;
+            return jsonLocations;
         }
 
         HttpURLConnection urlConnection = null;
@@ -103,12 +111,12 @@ public final class FlightQueryUtils {
             // then read the input stream and parse the response.
             if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 inputStream = urlConnection.getInputStream();
-                jsonResponse = readFromStream(inputStream);
+                jsonLocations = readFromStream(inputStream);
             } else {
                 Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
             }
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Problem retrieving the flight JSON results.", e);
+            Log.e(LOG_TAG, "Problem retrieving the location JSON results.", e);
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -118,7 +126,8 @@ public final class FlightQueryUtils {
                 inputStream.close();
             }
         }
-        return jsonResponse;
+        Log.e(LOG_TAG, "JSON is : " + jsonLocations);
+        return jsonLocations;
     }
 
     /**
@@ -143,13 +152,18 @@ public final class FlightQueryUtils {
      * Return a list of {@link Trip} objects that has been built up from
      * parsing the given JSON response.
      */
-    private static List<Trip> extractFeatureFromJson(String tripJSON) {
+    private static Location extractLocsFromJson(String locJSON) {
         // If the JSON string is empty or null, then return early.
-        if (TextUtils.isEmpty(tripJSON)) {
+        if (TextUtils.isEmpty(locJSON)) {
             return null;
         }
         // Create an empty ArrayList that we can start adding trips to
-        List<Trip> trips = new ArrayList<>();
+        //List<Location> locations = new ArrayList<>();
+        ArrayList<String> locsAvailable = new ArrayList<>();;
+        Map <String, String> locsMap = new HashMap();
+        Location locs = null;
+
+        //List<String> locsList = new ArrayList<String>();
 
 
         // Try to parse the JSON string. If there's a problem with the way the JSON
@@ -157,63 +171,65 @@ public final class FlightQueryUtils {
         // Catch the exception so the app doesn't crash, and print the error message to the logs.
         try {
             //Convert tripJson String into a JSONObject
-            JSONObject baseJsonResponse = new JSONObject(tripJSON);
+            JSONObject baseJsonResponse = new JSONObject(locJSON);
 
-            //later need to get price for local currency based on locale and display that currency
-            //obsolete as it's always in EUR by default
-            String currency = baseJsonResponse.getString("currency");
+            JSONArray locArray = baseJsonResponse.getJSONArray("locations");
+            for (int x = 0; x<locArray.length(); x++){
+                JSONObject currentAirport = locArray.getJSONObject(x);
 
-            //Extract “data” JSONArray
-            JSONArray tripArray = baseJsonResponse.getJSONArray("data");
-            //Loop through each flight in the array
-            for (int i = 0; i < tripArray.length();i++){
+                String airportC = currentAirport.getString("id");
+                String airportN = currentAirport.getString("name");
+                String timezn = currentAirport.getString("timezone");
 
-                JSONObject currentTrip = tripArray.getJSONObject(i);
+                JSONObject city = currentAirport.getJSONObject("city");
+                String cityC = city.getString("id");
+                String cityN = city.getString("name");
+                JSONObject country = city.getJSONObject("country");
+                String countryC = country.getString("id");
+                String countryN = country.getString("name");
 
+                //Location location = new Location(airportC,airportN,cityC, cityN,countryC, countryN,
+                //        timezn);
 
-                int price = currentTrip.getInt("price");
-                String bookingUrl = currentTrip.getString("deep_link");
-                String depCity = currentTrip.getString("cityFrom");
-                String arrCity = currentTrip.getString("cityTo");
-
-                JSONObject duration = currentTrip.getJSONObject("duration");
-                long depDur = duration.getLong("departure");
-                long retDur = duration.getLong("return");
-
-                JSONArray flightArray = currentTrip.getJSONArray("route");
-                List<Flight> flights = new ArrayList<>();
-                for(int x = 0; x < flightArray.length(); x++){
-                    JSONObject currentFlight = flightArray.getJSONObject(x);
-
-                    String depAirportCode = currentFlight.getString("flyFrom");
-                    String arrAirportCode = currentFlight.getString("flyTo");
-                    long depTime = currentFlight.getLong("dTime"); //local time
-                    long arrTime = currentFlight.getLong("aTime"); //local time
-                    String airlineCode = currentFlight.getString("airline");
-                    String flightNo = currentFlight.getString("flight_no");
+                //locations.add(location);
 
 
-                    Flight flight = new Flight(depAirportCode, arrAirportCode, depTime, arrTime,
-                                airlineCode, flightNo);
-                    flights.add(flight);
-                }
-//todo: add currentTrip.getString("lang"); for locale
-                Trip trip = new Trip(flights, price, currency, bookingUrl, depCity, arrCity, depDur,
-                        retDur);
-                trips.add(trip);
+                locsMap.put(airportN, airportC);
+                locsMap.put(cityN, cityC);
+                locsMap.put(countryN, countryC);
 
+                //todo: add the locations here and use this set for the adapter ---> how to map city to code etc?
+                //map object
+                // distinct list --> set https://stackoverflow.com/questions/13429119/get-unique-values-from-arraylist-in-java
+                // making my own list
+                if(!locsAvailable.contains(airportN))
+                    locsAvailable.add(airportN);
+                if(!locsAvailable.contains(cityN))
+                    locsAvailable.add(cityN);
+                if(!locsAvailable.contains(countryN))
+                    locsAvailable.add(countryN);
             }
+            locsMap.put("anywhere", "anywhere");
+            //locsAvailable.add("anywhere");
+
+            locs = new Location(locsAvailable,locsMap);
+            //Log.e(LOG_TAG, "locsAvailable array: " + locsAvailable);
+            //Log.e(LOG_TAG, "locsMap: " + locsMap);
+
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
             // catch the exception here, so the app doesn't crash. Print a log message
             // with the message from the exception.
-            Log.e("FlightQueryUtils", "Problem parsing the trip JSON results", e);
+            Log.e("LocationQueryUtils", "Problem parsing the location JSON results", e);
         }
 
         // Return the list of trips
-        return trips;
+        return locs;
     }
 
 
 
+
+
 }
+

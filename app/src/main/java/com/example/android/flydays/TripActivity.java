@@ -90,7 +90,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         uriBuilder.appendQueryParameter("directFlights", directOrNot);
         uriBuilder.appendQueryParameter("locale", "en");
         uriBuilder.appendQueryParameter("partner", "picky");
-        uriBuilder.appendQueryParameter("limit", "5");
+        uriBuilder.appendQueryParameter("limit", "30");
         uriBuilder.appendQueryParameter("sort", "price");
         uriBuilder.appendQueryParameter("asc", "1");
 

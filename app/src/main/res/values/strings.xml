@@ -2,14 +2,31 @@
     <string name="app_name">FlyDays</string>
 
     <string name="search_button">SEARCH</string>
-    <string name="departure_loc">departure location</string>
-    <string name="holiday_loc">holiday location</string>
-    <string name="dep_date">departure date</string>
-    <string name="return_date">return date</string>
-    <string name="direct_only">direct only</string>
+    <string name="departure_loc">e.g. Paris</string>
+    <string name="holiday_loc">e.g. anywhere</string>
+    <string name="dep_date">From</string>
+    <string name="return_date">To</string>
+    <string name="direct_only">Direct only</string>
     <string name="no_trips">No trips found!</string>
     <string name="no_internet">No internet connection!</string>
     <string name="trip_search_results">Search results</string>
+
+    <string name="trip_availability">Trip availability:</string>
+    <string name="from">From:</string>
+    <string name="to">To:</string>
+    <string name="dep_day">Departure day:</string>
+    <string name="mon">Mon</string>
+    <string name="tue">Tue</string>
+    <string name="wed">Wed</string>
+    <string name="thu">Thu</string>
+    <string name="fri">Fri</string>
+    <string name="sat">Sat</string>
+    <string name="sun">Sun</string>
+    <string name="days_in">Days in destination</string>
+    <string name="d_in_hint">2 for Fri-Sun</string>
+    <string name="one_way">One way</string>
+
+
     
     <string-array name="hol_options">
         <item>london</item>

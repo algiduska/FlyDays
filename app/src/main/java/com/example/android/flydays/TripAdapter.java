@@ -40,6 +40,7 @@ public class TripAdapter extends ArrayAdapter<Trip> {
     //for local time the constructor can also have a locale variable:
     //SimpleDateFormat sdf = new SimpleDateFormat("MMM d H:mm", Locale.CANADA);
     //todo: add locale to my times as they now show summer time (+1 hour)
+    // check this to implement https://stackoverflow.com/questions/6567923/timezone-conversion
 
     //method used later for time formatting
     private String formatTime(Date dateObject) {

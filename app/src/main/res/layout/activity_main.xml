@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,49 +10,206 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp">
 
-        <AutoCompleteTextView
-            android:id="@+id/location_from"
-            android:inputType="text"
-            android:hint="@string/departure_loc"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp" />
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="2dp"
+            android:paddingLeft="5dp"
+            android:text="@string/from"
+            />
 
-        <AutoCompleteTextView
+        <MultiAutoCompleteTextView
+            android:id="@+id/location_from"
+            android:layout_width="match_parent"
+            android:layout_height="43dp"
+            android:background="@android:color/white"
+            android:clickable="true"
+            android:hint="@string/departure_loc"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:nextFocusForward="@+id/location_to"
+            android:padding="5dp"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="2dp"
+            android:paddingLeft="5dp"
+            android:text="@string/to"
+            />
+
+        <MultiAutoCompleteTextView
             android:id="@+id/location_to"
             android:inputType="text"
             android:hint="@string/holiday_loc"
+            android:layout_width="match_parent"
+            android:layout_height="43dp"
+            android:padding="5dp"
+            android:imeOptions="actionNext"
+            android:clickable="true"
+            android:nextFocusForward="@+id/search_button"
+            android:background="@android:color/white"
+            android:textSize="24sp"/>
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="2dp"
+            android:text="@string/trip_availability"
+            android:paddingLeft="5dp"
             />
 
-        <!-- will become departure range (CalendarView - how to make it smaller?) -->
-        <EditText
-            android:id="@+id/departure_date"
-            android:inputType="date"
-            android:hint="@string/dep_date"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp" />
+            android:orientation="horizontal">
 
-        <!-- will become days in destination with little info that it's calculated based on dep date -->
-        <EditText
-            android:id="@+id/return_date"
-            android:inputType="date"
-            android:hint="@string/return_date"
+            <EditText
+                android:id="@+id/departure_date"
+                android:inputType="date"
+                android:hint="@string/dep_date"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
+                android:focusable="false"
+                android:layout_width="0dp"
+                android:layout_height="43dp"
+                android:layout_weight="1"
+                android:layout_marginRight="24dp"
+                android:padding="5dp"
+                android:nextFocusDown="@+id/return_date"
+                android:background="@android:color/white"
+                android:textSize="20sp"/>
+
+            <!-- will become days in destination with little info that it's calculated based on dep date -->
+            <EditText
+                android:id="@+id/return_date"
+                android:inputType="date"
+                android:hint="@string/return_date"
+                android:clickable="true"
+                android:focusable="false"
+                android:layout_width="0dp"
+                android:layout_height="43dp"
+                android:layout_weight="1"
+                android:padding="5dp"
+                android:layout_marginLeft="24dp"
+                android:nextFocusForward="@+id/direct_checkbox"
+                android:background="@android:color/white"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
+
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp" />
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="2dp"
+            android:text="@string/dep_day"
+            android:paddingLeft="5dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:text="@string/mon"
+                android:id="@+id/btn0"
+                android:layout_gravity="center_vertical"
+                style="@style/MyButtonStyleSmall"/>
+
+            <Button
+                android:id="@+id/btn1"
+                style="@style/MyButtonStyleSmall"
+                android:layout_gravity="center_vertical"
+                android:text="@string/tue" />
+
+            <Button
+                android:text="@string/wed"
+                android:id="@+id/btn2"
+                android:layout_gravity="center_vertical"
+                style="@style/MyButtonStyleSmall"/>
+
+            <Button
+                android:text="@string/thu"
+                android:id="@+id/btn3"
+                android:layout_gravity="center_vertical"
+                style="@style/MyButtonStyleSmall"/>
+
+            <Button
+                android:text="@string/fri"
+                android:id="@+id/btn4"
+                android:layout_gravity="center_vertical"
+                style="@style/MyButtonStyleSmall"/>
+
+            <Button
+                android:text="@string/sat"
+                android:id="@+id/btn5"
+                android:layout_gravity="center_vertical"
+                style="@style/MyButtonStyleSmall"/>
+
+            <Button
+                android:id="@+id/btn6"
+                style="@style/MyButtonStyleSmall"
+                android:layout_gravity="center_vertical"
+                android:text="@string/sun" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="2dp"
+            android:paddingLeft="5dp"
+            android:text="@string/days_in" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/days_in"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="43dp"
+                android:layout_marginRight="24dp"
+                android:hint="@string/d_in_hint"
+                android:inputType="number"
+                android:padding="5dp"
+                android:clickable="true"
+                android:nextFocusForward="@+id/search_button"
+                android:background="@android:color/white"
+                android:textSize="20sp" />
+
+            <CheckBox
+                android:id="@+id/one_way"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="43dp"
+                android:layout_marginLeft="24dp"
+                android:text="@string/one_way"
+                android:nextFocusForward="@+id/search_button"
+                android:textSize="20sp"/>
+
+        </LinearLayout>
 
         <CheckBox
             android:id="@+id/direct_checkbox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="@string/direct_only"/>
+            android:layout_height="43dp"
+            android:text="@string/direct_only"
+            android:layout_marginTop="20dp"
+            android:nextFocusForward="@+id/search_button"
+            android:textSize="20sp"/>
 
 
     </LinearLayout>
@@ -62,6 +220,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/search_button"
+        android:textSize="34sp"
+        android:textColor="@android:color/white"
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true" />
 
