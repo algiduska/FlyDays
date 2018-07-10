@@ -103,13 +103,14 @@
                         android:layout_centerHorizontal="true"
                         tools:text="1h 15m"/>
 
-                    <!-- need to make this an arrow not just a line -->
+                    <!-- need to make this an arrow not just a line
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:scaleType="center"
                         android:src="@drawable/outbound_arrow"/>
+                        -->
 
                     <TextView
                         android:id="@+id/out_departure_date"
@@ -117,6 +118,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
                         android:layout_centerHorizontal="true"
+                        android:textStyle="bold"
                         tools:text="Fri, 12 Aug"/>
 
                 </RelativeLayout>
@@ -157,6 +159,7 @@
 
             <!-- space for return flight -->
             <LinearLayout
+                android:id="@+id/return_flight"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -217,13 +220,14 @@
                         android:layout_centerHorizontal="true"
                         tools:text="1h 15m"/>
 
-                    <!-- need to make this an arrow not just a line -->
+                    <!-- need to make this an arrow not just a line
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:scaleType="center"
                         android:src="@drawable/return_arrow"/>
+                        -->
 
                     <TextView
                         android:id="@+id/ret_departure_date"

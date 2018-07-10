@@ -8,10 +8,10 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <!-- https://stackoverflow.com/questions/10258823/how-to-create-really-small-buttons-in-android-from-code -->
+    <!-- whole button thing: https://stackoverflow.com/questions/10258823/how-to-create-really-small-buttons-in-android-from-code -->
     <style name="MyButtonStyleSmall" parent="android:Widget.Button.Small">
         <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_height">43dp</item>
         <item name="android:layout_weight">1</item>
         <item name="android:minHeight">0dp</item>
         <item name="android:minWidth">0dp</item>

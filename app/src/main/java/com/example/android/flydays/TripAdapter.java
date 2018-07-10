@@ -28,7 +28,6 @@ public class TripAdapter extends ArrayAdapter<Trip> {
 
     private static final String LOG_TAG = TripAdapter.class.getName();
 
-    //todo: maybe use switch to choose which layout in xml I want depending on the type of trip
 
     //for format representation: https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
     //method used later for date formatting
@@ -81,7 +80,6 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 retDurationView.setText(secToDuration(currentTrip.getRetDuration()));
 
             List<Flight> flights = currentTrip.getFlights();
-            //todo: try to change xml here. for one way it still shows the second view although it's wrap content
 
             //assuming we are working with direct flights only
             //variables need to be declared
@@ -151,7 +149,12 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 TextView retDateView = (TextView) listItemView.findViewById(R.id.ret_departure_date);
                 String retDate = formatDate(retDeparture);
                 retDateView.setText(retDate);
+            }else {
+                //if it's one way flight, hide the second part of the xml layout
+                View layout = listItemView.findViewById(R.id.return_flight);
+                layout.setVisibility(View.GONE);
             }
+
 
             return listItemView;
         }

@@ -22,8 +22,12 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class TripActivity extends AppCompatActivity implements LoaderCallbacks<List<Trip>> {
+
+    //todo: make as many calls as required
+    //todo: order the results of the calls by price
 
     /** base URL for trip data from the Kiwi dataset */
     private static final String FLIGHT_REQUEST_URL =
@@ -48,6 +52,12 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     private String depDate;
     private String retDate;
     private boolean dirOnly;
+    private boolean oneWay;
+    private String langLoc;
+    private String depString;
+    private String retString;
+    private ArrayList<String> depDates = new ArrayList<>();
+    private ArrayList<String> retDates = new ArrayList<>();
 
         /**
      * Creates the url based on established preferences and uses it for API call to update
@@ -55,23 +65,12 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
      */
     @Override
     public Loader<List<Trip>> onCreateLoader(int i, Bundle bundle) {
-
-        // Create a new loader for the given URL
-     /*   SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String minMagnitude = sharedPrefs.getString(
-                getString(R.string.settings_min_magnitude_key),
-                getString(R.string.settings_min_magnitude_default));
-        String orderBy = sharedPrefs.getString(
-                getString(R.string.settings_order_by_key),
-                getString(R.string.settings_order_by_default));
-        Uri baseUri = Uri.parse(FLIGHT_REQUEST_URL);
-        Uri.Builder uriBuilder = baseUri.buildUpon();
-     */
+        Log.e(LOG_TAG, "Loader started");
 
         Uri baseUri = Uri.parse(FLIGHT_REQUEST_URL);
         Uri.Builder uriBuilder = baseUri.buildUpon();
 
-        String onewayOrReturn = retDate==null ? "oneway" : "round";
+        String onewayOnly = oneWay ? "oneway" : "round";
         String directOrNot = dirOnly ? "1" : "0";
         /*
         basic example:
@@ -80,15 +79,17 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         locale=en&partner=picky&price_to=100&limit=30&sort=price&asc=1
          */
 
+        //todo: put his in a method with params for array lists of dates
+        //todo: if there isn't return it would throw nullpointer exception --> fix
         uriBuilder.appendQueryParameter("flyFrom", depLoc);
         uriBuilder.appendQueryParameter("to", holLoc);
-        uriBuilder.appendQueryParameter("dateFrom", depDate);
-        uriBuilder.appendQueryParameter("dateTo", depDate);
-        uriBuilder.appendQueryParameter("returnFrom", retDate);
-        uriBuilder.appendQueryParameter("returnTo",retDate);
-        uriBuilder.appendQueryParameter("typeFlight", onewayOrReturn);
+        uriBuilder.appendQueryParameter("dateFrom", depDates.get(0));
+        uriBuilder.appendQueryParameter("dateTo", depDates.get(0));
+        uriBuilder.appendQueryParameter("returnFrom", retDates.get(0));
+        uriBuilder.appendQueryParameter("returnTo",retDates.get(0));
+        uriBuilder.appendQueryParameter("typeFlight", onewayOnly);
         uriBuilder.appendQueryParameter("directFlights", directOrNot);
-        uriBuilder.appendQueryParameter("locale", "en");
+        uriBuilder.appendQueryParameter("locale", langLoc);
         uriBuilder.appendQueryParameter("partner", "picky");
         uriBuilder.appendQueryParameter("limit", "30");
         uriBuilder.appendQueryParameter("sort", "price");
@@ -157,6 +158,30 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         depDate = bundle.getString("ddate");
         retDate = bundle.getString("rdate");
         dirOnly = bundle.getBoolean("dir");
+        oneWay = bundle.getBoolean("ow");
+        langLoc = bundle.getString("lang");
+        depString = bundle.getString("dstring");
+        retString = bundle.getString("rstring");
+
+        Log.e(LOG_TAG, "depString passed into trip activity" + depString);
+
+        //todo: run a call for each set of dates
+        //todo: implement compareTo?
+
+        Scanner sD = new Scanner(depString);
+        while(sD.hasNext()){
+            depDates.add(sD.next());
+        }
+        sD.close();
+
+        Scanner sR = new Scanner(retString);
+        while(sR.hasNext()) {
+            retDates.add(sR.next());
+        }
+        sR.close();
+        Log.e(LOG_TAG, "depDates arrayList: " + depDates);
+        Log.e(LOG_TAG, "retDates arrayList: " + retDates);
+
 
         setContentView(R.layout.trip_activity);
 

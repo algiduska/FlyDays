@@ -12,33 +12,26 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 
-import android.app.TimePickerDialog;
-import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
-import org.w3c.dom.Text;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 //todo: edit trip activity to show one way flights correctly
-//todo: make it work with range
 //todo: create an introduction page (with logo) for location api to be called
 //todo: add extra filtering options
 //todo: create a custom adapter? to sort locations better
@@ -47,10 +40,10 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderCallbacks<Location>{
 
-    MultiAutoCompleteTextView locFromView;
-    MultiAutoCompleteTextView locToView;
-    EditText depDateText;
-    EditText retDateText;
+    AutoCompleteTextView locFromView;
+    AutoCompleteTextView locToView;
+    EditText minDateText;
+    EditText maxDateText;
     CheckBox dirOnlyBox;
     CheckBox oneWayOnly;
     EditText daysInText;
@@ -58,7 +51,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     String langLocale;
 
+    private int daysIn=0;
+
+    private long min;
+    private long max;
+    private ArrayList<Long> datesArray;
+    private String depDates = "";
+    private String retDates = "";
+
     private int dYear, dMonth, dDay;
+    //day of the week 1-7, where 1 is Sunday
+    private int dayWeek;
+    private int dayWanted;
 
     private ArrayAdapter<String> adapterFrom;
     private ArrayAdapter<String> adapterTo;
@@ -114,11 +118,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 */
 
 
-        depDateText = findViewById(R.id.departure_date);
-        retDateText = findViewById(R.id.return_date);
+        minDateText = findViewById(R.id.departure_date);
+        maxDateText = findViewById(R.id.return_date);
 
-        depDateText.setOnClickListener(this);
-        retDateText.setOnClickListener(this);
+        minDateText.setOnClickListener(this);
+        maxDateText.setOnClickListener(this);
 
         dirOnlyBox = findViewById(R.id.direct_checkbox);
 
@@ -134,13 +138,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dYear = c.get(Calendar.YEAR);
         dMonth = c.get(Calendar.MONTH);
         dDay = c.get(Calendar.DAY_OF_MONTH);
+        //dayWeek = c.get(Calendar.DAY_OF_WEEK);
         //Log.e(LOG_TAG, "calendar c after creation" + c);
 
 
         //buttons for days, xml and code from https://stackoverflow.com/questions/32534076/what-is-the-best-way-to-do-a-button-group-that-can-be-selected-and-activate-inde
         for(int i = 0; i < btn.length; i++){
             btn[i] = (Button) findViewById(btn_id[i]);
-            btn[i].setBackgroundColor(Color.rgb(207, 207, 207));
+            btn[i].setBackgroundColor(Color.rgb(255, 255, 255));
             btn[i].setOnClickListener(this);
         }
         btn_unfocus = btn[0];
@@ -163,9 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //todo: do I need two or just one is sufficient?
         locToView.setThreshold(1);
-        locToView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         locFromView.setThreshold(1);
-        locFromView.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         locFromView.setAdapter(adapterFrom);
         locToView.setAdapter(adapterTo);
 
@@ -195,14 +198,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
 
+
+
+
         //todo: go directly to the next field when finished with one
         //similar example: https://stackoverflow.com/questions/23123833/edittext-automatically-go-to-a-new-line
 
 
         locFromView.getText().clear();
         locToView.getText().clear();
-        depDateText.getText().clear();
-        retDateText.getText().clear();
+        minDateText.getText().clear();
+        maxDateText.getText().clear();
         dirOnlyBox.toggle();
 
 
@@ -218,22 +224,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
 
             case R.id.search_button:
+                //activating methods to retrieve all possible dates that will be passed to tripactivity
+
+
+                if (!oneWayOnly.isChecked()) {
+                    daysIn = Integer.parseInt(daysInText.getText().toString());
+                    getReturnDates(min, max, dayWeek, dayWanted, daysIn);
+
+                }else{
+                    getOnewayDates(min, max, dayWeek, dayWanted);
+                }
+
+                Log.e(LOG_TAG, "depDates string " + depDates);
+                Log.e(LOG_TAG, "retDates string " + retDates);
+
+
                 Intent search = new Intent(MainActivity.this, TripActivity.class);
+
 
                 //on how to pass data:
                 //https://stackoverflow.com/questions/3510649/how-to-pass-a-value-from-one-activity-to-another-in-android
                 Bundle bundle = new Bundle();
-
                 //Add your data to bundle
-                bundle.putString("dloc", (locsMap.get((locFromView.getText()).toString())).toString());
-                bundle.putString("hloc", (locsMap.get((locToView.getText()).toString())).toString());
-                bundle.putString("ddate", (depDateText.getText()).toString());
+                bundle.putString("dloc", (locsMap.get((locFromView.getText()).toString())));
+                bundle.putString("hloc", (locsMap.get((locToView.getText()).toString())));
+                bundle.putString("ddate", (minDateText.getText()).toString());
                 //todo: make a toast message if rdate is before ddate
-                bundle.putString("rdate", (retDateText.getText()).toString());
-                bundle.putString("days", daysInText.getText().toString());
+                bundle.putString("rdate", (maxDateText.getText()).toString());
+                //bundle.putString("days", daysInText.getText().toString());
                 bundle.putBoolean("dir", dirOnlyBox.isChecked());
                 bundle.putBoolean("ow", oneWayOnly.isChecked());
                 bundle.putString("lang", langLocale);
+                bundle.putString("dstring", depDates);
+                bundle.putString("rstring", retDates);
+
 
                 //Add the bundle to the intent
                 search.putExtras(bundle);
@@ -255,12 +279,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                   int monthOfYear, int dayOfMonth) {
                                 //c becomes minimum date for selection in the return date
                                 c.set(year, monthOfYear, dayOfMonth);
-                                depDateText.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+                                minDateText.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+                                dayWeek = c.get(Calendar.DAY_OF_WEEK);
+                                min = c.getTimeInMillis();
+                                Log.e(LOG_TAG, "The day of the week is " + dayWeek);
                             }
                         }, dYear, dMonth, dDay);
                 datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
 
-                depDateText.setFocusable(false);
+                minDateText.setFocusable(false);
                 datePickerDialog.setTitle("");
                 datePickerDialog.show();
                 break;
@@ -274,14 +301,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                   int monthOfYear, int dayOfMonth) {
 
                                 //month +1 as months are 0-11
-                                retDateText.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+                                maxDateText.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+                                c.set(year, monthOfYear, dayOfMonth);
+                                //Date maxDate = new Date (year, monthOfYear, dayOfMonth);
+                                //max=maxDate.getTime();
+                                max = c.getTimeInMillis();
+                                c.setTimeInMillis(System.currentTimeMillis());
 
                             }
                         }, dYear, dMonth, dDay);
 
                 datePickerDialog2.getDatePicker().setMinDate(c.getTimeInMillis());
 
-                retDateText.setFocusable(false);
+                maxDateText.setFocusable(false);
                 datePickerDialog2.setTitle("");
                 datePickerDialog2.show();
                 break;
@@ -291,44 +323,124 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn0 :
                 setFocus(btn_unfocus, btn[0]);
+                dayWanted=2;
                 break;
 
             case R.id.btn1 :
                 setFocus(btn_unfocus, btn[1]);
+                dayWanted=3;
                 break;
 
             case R.id.btn2 :
                 setFocus(btn_unfocus, btn[2]);
+                dayWanted=4;
                 break;
 
             case R.id.btn3 :
                 setFocus(btn_unfocus, btn[3]);
+                dayWanted=5;
                 break;
 
             case R.id.btn4 :
                 setFocus(btn_unfocus, btn[4]);
+                dayWanted=6;
                 break;
 
             case R.id.btn5 :
                 setFocus(btn_unfocus, btn[5]);
+                dayWanted=7;
                 break;
 
             case R.id.btn6 :
                 setFocus(btn_unfocus, btn[6]);
+                dayWanted=1;
                 break;
             default:
                 Log.e(LOG_TAG, "OnClick went to default");
                 break;
         }
     }
-
+//************************************METHODS********************************************************
+    /**
+     * Makes functionality for weekday buttons to be selected and deselected with following colours
+     * @param btn_unfocus
+     * @param btn_focus
+     */
     private void setFocus(Button btn_unfocus, Button btn_focus){
         btn_unfocus.setTextColor(Color.rgb(49, 50, 51));
-        btn_unfocus.setBackgroundColor(Color.rgb(207, 207, 207));
+        btn_unfocus.setBackgroundColor(Color.rgb(255, 255, 255));
         btn_focus.setTextColor(Color.rgb(255, 255, 255));
-        btn_focus.setBackgroundColor(Color.rgb(3, 106, 150));
+        btn_focus.setBackgroundColor(Color.rgb(3, 106, 150));  //blue
         this.btn_unfocus = btn_focus;
     }
+
+
+    //1 day is 86,400,000 milliseconds
+
+    private String makeDateString(long dateInMilli) {
+        Date dateObject = new Date (dateInMilli);
+        Log.e(LOG_TAG, "dateobject: " + dateObject);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        return dateFormat.format(dateObject);
+    }
+
+    /**
+     * Finds and array of possible departure dates in milliseconds
+     */
+
+    private void getReturnDates(long min, long max, int dayWeek, int dayWanted, int daysIn){
+        int difference = (dayWeek-dayWanted) * 86400000;
+        int datesAmount = 0;
+        if(difference<0)
+            difference=difference*(-1);
+        long newDate = min + difference; //first day of possible departure
+        Log.e(LOG_TAG, "dayweek " + dayWeek);
+        Log.e(LOG_TAG, "dayWantd " + dayWanted);
+        Log.e(LOG_TAG, "daysIn int " + daysIn);
+        Log.e(LOG_TAG, "min " + min);
+        Log.e(LOG_TAG, "max " + max);
+        Log.e(LOG_TAG, "difference " + difference);
+        Log.e(LOG_TAG, "newDate, first one " + newDate);
+        while (newDate<max){
+            String stringDateO = makeDateString(newDate);
+            Log.e(LOG_TAG, "first date" + stringDateO);
+            String stringDateI = makeDateString(newDate+(daysIn*86400000)); //outgoing plus days * milli
+            Log.e(LOG_TAG, "first return date" + stringDateI);
+            depDates += stringDateO + " ";
+            retDates += stringDateI + " ";
+            newDate += 7 * 86400000; //new date becomes another day of the week following week
+            datesAmount += 1;
+        }
+        Log.e(LOG_TAG, "dates amount " + datesAmount);
+
+    }
+
+    private void getOnewayDates(long min, long max, int dayWeek, int dayWanted){
+        int difference = (dayWeek-dayWanted) * 86400000;
+        if(difference<0)
+            difference=difference*(-1);
+        long newDate = min + difference; //first day of possible departure
+        while (newDate<max){
+            String stringDateO = makeDateString(newDate);
+            depDates += stringDateO + " ";
+            newDate += 7 * 86400000; //new date becomes another day of the week following week
+        }
+    }
+
+    /*
+    private ArrayList<Long> getDatesArray(long min, long max, int dayWeek, int dayWanted){
+        datesArray = new ArrayList<>();
+        int difference = (dayWeek-dayWanted) * 86400;
+        if(difference<0)
+            difference=difference*(-1);
+        long newDate = min + difference;
+        while(newDate<=max){
+            datesArray.add(newDate);
+            newDate= newDate + (7 * 86400);
+        }
+        return datesArray;
+    }
+     */
 
     //****************************************locations threading********************************************
 
