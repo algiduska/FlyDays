@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         minDateText = findViewById(R.id.departure_date);
+        //todo: maxDateText might not be within the range, change the wording or not let corresponding depString pass?
         maxDateText = findViewById(R.id.return_date);
 
         minDateText.setOnClickListener(this);
@@ -285,6 +286,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 Log.e(LOG_TAG, "The day of the week is " + dayWeek);
                             }
                         }, dYear, dMonth, dDay);
+                //todo: if going back from results this line causes illegal argument exception:
+                //fromDate: Fri Jul 13 12:27:44 GMT+01:00 2018 does not precede toDate: Fri Jul 13 12:27:44 GMT+01:00 2018
                 datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
 
                 minDateText.setFocusable(false);
@@ -387,12 +390,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Finds and array of possible departure dates in milliseconds
      */
-
+    //todo: deal with situation such as dayweek 7, dayWantd 6, daysIn int 2 - flying friday not sunday
     private void getReturnDates(long min, long max, int dayWeek, int dayWanted, int daysIn){
-        int difference = (dayWeek-dayWanted) * 86400000;
-        int datesAmount = 0;
-        if(difference<0)
-            difference=difference*(-1);
+        //need to delete the string otherwise it would add to it after going back from results in the app
+        depDates="";
+        retDates="";
+        int difference;
+        if(dayWeek>dayWanted){
+            difference=(7-dayWeek+dayWanted) * 86400000;
+        }else if(dayWeek<dayWanted){
+            difference = -(dayWeek-dayWanted) * 86400000;
+        }else{
+            difference=0;
+        }
+
         long newDate = min + difference; //first day of possible departure
         Log.e(LOG_TAG, "dayweek " + dayWeek);
         Log.e(LOG_TAG, "dayWantd " + dayWanted);
@@ -409,13 +420,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             depDates += stringDateO + " ";
             retDates += stringDateI + " ";
             newDate += 7 * 86400000; //new date becomes another day of the week following week
-            datesAmount += 1;
+
         }
-        Log.e(LOG_TAG, "dates amount " + datesAmount);
+
 
     }
 
     private void getOnewayDates(long min, long max, int dayWeek, int dayWanted){
+        depDates = "";
         int difference = (dayWeek-dayWanted) * 86400000;
         if(difference<0)
             difference=difference*(-1);
@@ -477,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Clear the adapter of previous earthquake data
         adapterFrom.clear();
         adapterTo.clear();
-
+        //todo: what if the call doesn't work and throw null pointer exception?
         locsList = locationStrings.getLocsList();
         locsMap = locationStrings.getLocsMap();
         Log.e(LOG_TAG, "Locs map" + locsMap);
@@ -485,6 +497,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // If there is a valid list of {@link Trip}s, then add them to the adapter's
         // data set. This will trigger the ListView to update.
         if (locsList != null && !locsList.isEmpty()) {
+
             Collections.sort(locsList);
             adapterFrom.addAll(locsList);
             adapterTo.addAll(locsList);

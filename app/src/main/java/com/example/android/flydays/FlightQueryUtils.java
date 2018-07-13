@@ -36,6 +36,8 @@ public final class FlightQueryUtils {
 
     /**
      * Query the kiwi flight info and return a list of {@link Trip} objects.
+     *
+     * all methods from this class are being used in this method, initialised from TripLoader
      */
     public static List<Trip> fetchTripData(String requestUrl) {
         /* for testing whether the progressBar works the thread goes to sleep for 2000ms
@@ -95,8 +97,8 @@ public final class FlightQueryUtils {
         try {
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
-            urlConnection.setReadTimeout(10000 /* milliseconds */);
-            urlConnection.setConnectTimeout(15000 /* milliseconds */);
+            urlConnection.setReadTimeout(15000 /* milliseconds */);
+            urlConnection.setConnectTimeout(20000 /* milliseconds */);
             urlConnection.connect();
 
             // If the request was successful (response code 200),
@@ -159,7 +161,7 @@ public final class FlightQueryUtils {
             //Convert tripJson String into a JSONObject
             JSONObject baseJsonResponse = new JSONObject(tripJSON);
 
-            //later need to get price for local currency based on locale and display that currency
+            //todo: need to get price for local currency and display that currency
             //obsolete as it's always in EUR by default
             String currency = baseJsonResponse.getString("currency");
 

@@ -1,26 +1,24 @@
 package com.example.android.flydays;
 
+import android.annotation.TargetApi;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -40,7 +38,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
      * Constant value for the trip loader ID. We can choose any integer.
      * This really only comes into play if you're using multiple loaders.
      */
-    private static final int TRIP_LOADER_ID = 1;
+    private static int trip_loader_id;
 
     /** TextView that is displayed when the list is empty */
     private TextView mEmptyStateTextView;
@@ -83,10 +81,10 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         //todo: if there isn't return it would throw nullpointer exception --> fix
         uriBuilder.appendQueryParameter("flyFrom", depLoc);
         uriBuilder.appendQueryParameter("to", holLoc);
-        uriBuilder.appendQueryParameter("dateFrom", depDates.get(0));
-        uriBuilder.appendQueryParameter("dateTo", depDates.get(0));
-        uriBuilder.appendQueryParameter("returnFrom", retDates.get(0));
-        uriBuilder.appendQueryParameter("returnTo",retDates.get(0));
+        uriBuilder.appendQueryParameter("dateFrom", depDates.get(trip_loader_id)); //use triploaderID here?
+        uriBuilder.appendQueryParameter("dateTo", depDates.get(trip_loader_id));
+        uriBuilder.appendQueryParameter("returnFrom", retDates.get(trip_loader_id));
+        uriBuilder.appendQueryParameter("returnTo",retDates.get(trip_loader_id));
         uriBuilder.appendQueryParameter("typeFlight", onewayOnly);
         uriBuilder.appendQueryParameter("directFlights", directOrNot);
         uriBuilder.appendQueryParameter("locale", langLoc);
@@ -110,39 +108,32 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         // Set empty state text to display "No trips found!"
         mEmptyStateTextView.setText(R.string.no_trips);
 
-        // Clear the adapter of previous earthquake data
-        tAdapter.clear();
-
         // If there is a valid list of {@link Trip}s, then add them to the adapter's
         // data set. This will trigger the ListView to update.
         if (trips != null && !trips.isEmpty()) {
+            //trips added to the adapter and displayed on the screen
             tAdapter.addAll(trips);
+            // sorting all the results based on price
+            // https://stackoverflow.com/questions/40143232/how-do-i-sort-the-content-of-my-custom-arrayadapter-by-a-variable-of-the-object
+            tAdapter.sort(new Comparator<Trip>() {
+                public int compare(Trip t1, Trip t2) {
+                    // Need to use Integer at first for primitive type!
+                    return Integer.valueOf(t1.getPrice()).compareTo(t2.getPrice());
+                }
+            });
+
         }
     }
+
+
 
     @Override
     public void onLoaderReset(Loader<List<Trip>> loader) {
         // Loader reset, so we can clear out our existing data.
+        // clearing the adapter after each of loader iterations not to add to previous searches
         tAdapter.clear();
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            Intent settingsIntent = new Intent(this, SettingsActivity.class);
-            startActivity(settingsIntent);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e(LOG_TAG, "onCreate started");
@@ -165,8 +156,6 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
         Log.e(LOG_TAG, "depString passed into trip activity" + depString);
 
-        //todo: run a call for each set of dates
-        //todo: implement compareTo?
 
         Scanner sD = new Scanner(depString);
         while(sD.hasNext()){
@@ -234,7 +223,14 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
             // Initialize the loader. Pass in the int ID constant defined above and pass in null for
             // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
             // because this activity implements the LoaderCallbacks interface).
-            loaderManager.initLoader(TRIP_LOADER_ID, null, this);
+
+            // initialises the actual loader with first 3 methods in this class (one calling triploader)
+            // and does that for each date pair --> each having own loader to execute on the background
+                        for(int x = 0; x < depDates.size(); x++) {
+                trip_loader_id = x;
+                loaderManager.initLoader(trip_loader_id, null, this);
+            }
+
         } else {
             // Otherwise, display error
             // First, hide loading indicator so error message will be visible

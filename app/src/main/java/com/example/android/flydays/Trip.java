@@ -1,5 +1,9 @@
 package com.example.android.flydays;
 
+import android.annotation.TargetApi;
+import android.support.annotation.NonNull;
+
+import java.util.Comparator;
 import java.util.List;
 
 public class Trip {
@@ -27,6 +31,7 @@ public class Trip {
         this.retDuration = retDuration;
         this.flights=flights;
     }
+
 
     public int getPrice() {
         return price;
@@ -63,5 +68,6 @@ public class Trip {
     public List<Flight> getFlights() {
         return flights;
     }
+
 }
 

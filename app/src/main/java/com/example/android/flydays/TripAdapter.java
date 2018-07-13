@@ -14,13 +14,14 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 
 public class TripAdapter extends ArrayAdapter<Trip> {
-
 
     public TripAdapter(Context context, List<Trip> trips) {
         super(context, 0, trips);
@@ -64,6 +65,7 @@ public class TripAdapter extends ArrayAdapter<Trip> {
             }
 
             Trip currentTrip = getItem(position);
+
 
             TextView destinationView = (TextView) listItemView.findViewById(R.id.destination_city);
             destinationView.setText(currentTrip.getArrCity());
@@ -155,9 +157,10 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 layout.setVisibility(View.GONE);
             }
 
-
             return listItemView;
         }
+
+
 }
 
 
