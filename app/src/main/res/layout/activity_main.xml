@@ -2,9 +2,11 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc">
+    android:background="#0099cc"
+    android:focusableInTouchMode="true">
 
     <!-- The primary full-screen view. -->
     <LinearLayout
@@ -30,7 +32,7 @@
             android:background="@android:color/white"
             android:clickable="true"
             android:hint="@string/departure_loc"
-            android:imeOptions="actionNext"
+            android:imeOptions="actionDone"
             android:inputType="text"
             android:nextFocusForward="@+id/location_to"
             android:padding="5dp"
@@ -45,6 +47,7 @@
             android:text="@string/to"
             />
 
+        <!-- actionDone ime options to close keyboard after enter is pressed - https://stackoverflow.com/questions/23251605/hidding-keyboard-after-enter-key-is-pressed -->
         <AutoCompleteTextView
             android:id="@+id/location_to"
             android:inputType="text"
@@ -52,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="43dp"
             android:padding="5dp"
-            android:imeOptions="actionNext"
+            android:imeOptions="actionDone"
             android:clickable="true"
             android:nextFocusForward="@+id/search_button"
             android:background="@android:color/white"
@@ -73,7 +76,7 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/departure_date"
+                android:id="@+id/departure_min"
                 android:inputType="date"
                 android:hint="@string/dep_date"
                 android:clickable="true"
@@ -84,13 +87,12 @@
                 android:layout_weight="1"
                 android:layout_marginRight="24dp"
                 android:padding="5dp"
-                android:nextFocusDown="@+id/return_date"
                 android:background="@android:color/white"
                 android:textSize="20sp"/>
 
             <!-- will become days in destination with little info that it's calculated based on dep date -->
             <EditText
-                android:id="@+id/return_date"
+                android:id="@+id/departure_max"
                 android:inputType="date"
                 android:hint="@string/return_date"
                 android:clickable="true"
@@ -100,7 +102,6 @@
                 android:layout_weight="1"
                 android:padding="5dp"
                 android:layout_marginLeft="24dp"
-                android:nextFocusForward="@+id/direct_checkbox"
                 android:background="@android:color/white"
                 android:textSize="20sp"/>
         </LinearLayout>
@@ -186,6 +187,7 @@
                 android:inputType="number"
                 android:padding="5dp"
                 android:clickable="true"
+                android:imeOptions="actionDone"
                 android:nextFocusForward="@+id/search_button"
                 android:background="@android:color/white"
                 android:textSize="20sp" />
@@ -197,7 +199,6 @@
                 android:layout_height="43dp"
                 android:layout_marginLeft="24dp"
                 android:text="@string/one_way"
-                android:nextFocusForward="@+id/search_button"
                 android:textSize="20sp"/>
 
         </LinearLayout>
@@ -208,7 +209,6 @@
             android:layout_height="43dp"
             android:text="@string/direct_only"
             android:layout_marginTop="20dp"
-            android:nextFocusForward="@+id/search_button"
             android:textSize="20sp"/>
 
 
@@ -221,6 +221,8 @@
         android:layout_height="wrap_content"
         android:text="@string/search_button"
         android:textSize="34sp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:textColor="@android:color/white"
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true" />

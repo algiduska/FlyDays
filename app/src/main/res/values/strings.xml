@@ -22,7 +22,7 @@
     <string name="fri">Fri</string>
     <string name="sat">Sat</string>
     <string name="sun">Sun</string>
-    <string name="days_in">Days in destination</string>
+    <string name="days_in">Days in destination:</string>
     <string name="d_in_hint">2 for Fri-Sun</string>
     <string name="one_way">One way</string>
 

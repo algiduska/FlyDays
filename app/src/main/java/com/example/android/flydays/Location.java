@@ -1,9 +1,10 @@
 package com.example.android.flydays;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class Location{
+public class Location implements Serializable{
 
     private ArrayList<String> locsList;
     private Map locsMap;

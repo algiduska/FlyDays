@@ -109,8 +109,9 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 outArrAirportView.setText(outbound.getArrAirportCode());
 
                 //there must be *1000L as the time is in seconds and java works with milliseconds
-                Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L);
-                Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L);
+                //using + 3600000 as equivalent to 1 hour difference between our time and CZ?
+                Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L + 3600000);
+                Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L + 3600000);
 
 
                 TextView outDepTimeView = (TextView) listItemView.findViewById(R.id.out_dep_time);

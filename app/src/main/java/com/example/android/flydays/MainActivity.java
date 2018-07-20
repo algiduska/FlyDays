@@ -10,8 +10,10 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.http.HttpResponseCache;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -21,8 +23,20 @@ import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 
+
+import android.widget.ListAdapter;
+import android.widget.MultiAutoCompleteTextView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -31,10 +45,12 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringTokenizer;
 //todo: edit trip activity to show one way flights correctly
 //todo: create an introduction page (with logo) for location api to be called
 //todo: add extra filtering options
 //todo: create a custom adapter? to sort locations better
+//todo: toast if no departure day is selected or others missing?
     //https://stackoverflow.com/questions/11574752/autocompletetextview-doesnt-suggest-what-i-want
 
 
@@ -49,7 +65,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     EditText daysInText;
     Button searchButton;
 
+
     String langLocale;
+    String langLocaleLong;
+
 
     private int daysIn=0;
 
@@ -88,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String LOG_TAG = MainActivity.class.getName();
 
+    private Context context;
+
 
 
 //***************************************************************************************************
@@ -96,10 +117,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = getApplicationContext();
 
         //muscardinus at https://stackoverflow.com/questions/4212320/get-the-current-language-in-device
         langLocale = Locale.getDefault().getLanguage();
-        //Log.e(LOG_TAG, "landLocale is: " + langLocale);
+        langLocaleLong = Locale.getDefault().getDisplayLanguage();
 
 
 /*      todo: make location work
@@ -118,9 +140,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 */
 
 
-        minDateText = findViewById(R.id.departure_date);
+        minDateText = findViewById(R.id.departure_min);
         //todo: maxDateText might not be within the range, change the wording or not let corresponding depString pass?
-        maxDateText = findViewById(R.id.return_date);
+        maxDateText = findViewById(R.id.departure_max);
 
         minDateText.setOnClickListener(this);
         maxDateText.setOnClickListener(this);
@@ -152,12 +174,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_unfocus = btn[0];
 
 
-        //todo: put an api call into a cache -- explore different strategies on what is most suitable
-
         // what is needed for autoCompleteTextView: https://developer.android.com/training/keyboard-input/style
 
         // Get a reference to the AutoCompleteTextView in the layout
         locFromView = findViewById(R.id.location_from);
+
         locToView = findViewById(R.id.location_to);
 
         // Create the adapter and set it to the AutoCompleteTextView
@@ -173,30 +194,106 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         locFromView.setAdapter(adapterFrom);
         locToView.setAdapter(adapterTo);
 
-//***********************************Networking****************************************************
+        //disabling focus when the activity starts (no blicking cursor) - https://stackoverflow.com/questions/6117967/how-to-remove-focus-without-setting-focus-to-another-control
+        RelativeLayout myPage = (RelativeLayout) findViewById(R.id.main_view);
+        myPage.requestFocus();
 
-        // Get a reference to the ConnectivityManager to check state of network connectivity
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+//todo: order them!
+        /**
+         * sets null unless something is chosen from the list
+         */
+        //trying to disable other than preselected responses
+        //NaseemH - https://stackoverflow.com/questions/13394054/android-restrict-user-from-selecting-other-than-autocompletion-suggestions
 
-        // Get details on the currently active default data network
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        locFromView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (!b) {
+                    //locFromView.setFocusable(false);
+                    String str = locFromView.getText().toString();
 
-        // If there is a network connection, fetch data
-        if (networkInfo != null && networkInfo.isConnected()) {
-            // Get a reference to the LoaderManager, in order to interact with loaders.
-            LoaderManager loaderManager = getLoaderManager();
+                    ListAdapter listAdapter = locFromView.getAdapter();
+                    for (int i = 0; i < listAdapter.getCount(); i++) {
+                        String temp = listAdapter.getItem(i).toString();
+                        if (str.compareTo(temp) == 0) {
+                            return;
+                        }
+                    }
+                    //set the first one on the list
+                    locFromView.setText(null);
+                }
+            }
+        });
 
-            // Initialize the loader. Pass in the int ID constant defined above and pass in null for
-            // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
-            // because this activity implements the LoaderCallbacks interface).
-            loaderManager.initLoader(LOCATION_LOADER_ID, null, this);
-        } else {
-            // todo: enable hard typing?
-            // First, hide loading indicator so error message will be visible
-            View loadingIndicator = findViewById(R.id.loading_spinner);
-            loadingIndicator.setVisibility(View.GONE);
+        locToView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (!b) {
+                    //locFromView.setFocusable(false);
+                    String str = locToView.getText().toString();
 
+                    ListAdapter listAdapter = locToView.getAdapter();
+                    for (int i = 0; i < listAdapter.getCount(); i++) {
+                        String temp = listAdapter.getItem(i).toString();
+                        if (str.compareTo(temp) == 0) {
+                            return;
+                        }
+                    }
+                    //set the first one on the list
+                    locToView.setText(null);
+                }
+            }
+        });
+
+
+
+
+
+//***********************************Caching and Networking********************************************
+        /**
+         * First the system looks for a cached version of Location type response (Map, List)
+         * and if there are issues with it a new HTTP call is executed
+         */
+        try{
+            //https://developer.android.com/training/data-storage/files#java
+            FileInputStream fileISteram = openFileInput(langLocaleLong);
+            //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/
+            ObjectInputStream ois = new ObjectInputStream(fileISteram);
+            Location location = (Location) ois.readObject();
+            locsMap = location.getLocsMap();
+            locsList = location.getLocsList();
+            Collections.sort(locsList);
+            adapterFrom.addAll(locsList);
+            adapterTo.addAll(locsList);
+            adapterTo.add("anywhere");
+
+        }catch(Exception e) {
+            Log.e(LOG_TAG, "exception in reading the cached file" + e);
+
+            // Get a reference to the ConnectivityManager to check state of network connectivity
+            ConnectivityManager connMgr = (ConnectivityManager)
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            // Get details on the currently active default data network
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+            // If there is a network connection, fetch data
+            if (networkInfo != null && networkInfo.isConnected()) {
+                // Get a reference to the LoaderManager, in order to interact with loaders.
+                LoaderManager loaderManager = getLoaderManager();
+
+                // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+                // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+                // because this activity implements the LoaderCallbacks interface).
+                loaderManager.initLoader(LOCATION_LOADER_ID, null, this);
+            } else {
+                // First, hide loading indicator so error message will be visible
+                View loadingIndicator = findViewById(R.id.loading_spinner);
+                loadingIndicator.setVisibility(View.GONE);
+
+                //todo: set an empty view to "no internet"
+
+            }
         }
 
 
@@ -214,6 +311,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
+
+
 
 
 //**************************************************************************************************
@@ -266,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(search);
                 break;
 
-            case R.id.departure_date:
+            case R.id.departure_min:
                 //https://stackoverflow.com/questions/14933330/datepicker-how-to-popup-datepicker-when-click-on-edittext
                 //code from Mohsin Bhat to add calendar dialog
 
@@ -294,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 datePickerDialog.setTitle("");
                 datePickerDialog.show();
                 break;
-            case R.id.return_date:
+            case R.id.departure_max:
                 //activate the dialogue
                 datePickerDialog2 = new DatePickerDialog(this,
                         new DatePickerDialog.OnDateSetListener() {
@@ -370,10 +469,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param btn_focus
      */
     private void setFocus(Button btn_unfocus, Button btn_focus){
-        btn_unfocus.setTextColor(Color.rgb(49, 50, 51));
-        btn_unfocus.setBackgroundColor(Color.rgb(255, 255, 255));
-        btn_focus.setTextColor(Color.rgb(255, 255, 255));
-        btn_focus.setBackgroundColor(Color.rgb(3, 106, 150));  //blue
+        btn_unfocus.setTextColor(getResources().getColor(R.color.black));
+        btn_unfocus.setBackgroundColor(getResources().getColor(R.color.white));
+        btn_focus.setTextColor(getResources().getColor(R.color.white));
+        btn_focus.setBackgroundColor(getResources().getColor(R.color.colorPrimary));  //blue
         this.btn_unfocus = btn_focus;
     }
 
@@ -388,7 +487,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * Finds and array of possible departure dates in milliseconds
+     * Finds dates and creates an array of possible departure dates (outbound&inbound) in milliseconds
      */
     //todo: deal with situation such as dayweek 7, dayWantd 6, daysIn int 2 - flying friday not sunday
     private void getReturnDates(long min, long max, int dayWeek, int dayWanted, int daysIn){
@@ -422,15 +521,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             newDate += 7 * 86400000; //new date becomes another day of the week following week
 
         }
-
-
     }
 
+    /**
+     * Finds dates and creates an array of possible departure dates (outbound only) in milliseconds
+     */
     private void getOnewayDates(long min, long max, int dayWeek, int dayWanted){
         depDates = "";
-        int difference = (dayWeek-dayWanted) * 86400000;
-        if(difference<0)
-            difference=difference*(-1);
+        int difference;
+        if(dayWeek>dayWanted){
+            difference=(7-dayWeek+dayWanted) * 86400000;
+        }else if(dayWeek<dayWanted){
+            difference = -(dayWeek-dayWanted) * 86400000;
+        }else{
+            difference=0;
+        }
         long newDate = min + difference; //first day of possible departure
         while (newDate<max){
             String stringDateO = makeDateString(newDate);
@@ -439,20 +544,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /*
-    private ArrayList<Long> getDatesArray(long min, long max, int dayWeek, int dayWanted){
-        datesArray = new ArrayList<>();
-        int difference = (dayWeek-dayWanted) * 86400;
-        if(difference<0)
-            difference=difference*(-1);
-        long newDate = min + difference;
-        while(newDate<=max){
-            datesArray.add(newDate);
-            newDate= newDate + (7 * 86400);
-        }
-        return datesArray;
-    }
-     */
 
     //****************************************locations threading********************************************
 
@@ -489,24 +580,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Clear the adapter of previous earthquake data
         adapterFrom.clear();
         adapterTo.clear();
+
         //todo: what if the call doesn't work and throw null pointer exception?
-        locsList = locationStrings.getLocsList();
-        locsMap = locationStrings.getLocsMap();
-        Log.e(LOG_TAG, "Locs map" + locsMap);
+        // if locationsStrings is not null do this?
+        if (locationStrings != null) {
+            locsList = locationStrings.getLocsList();
+            locsMap = locationStrings.getLocsMap();
+            Log.e(LOG_TAG, "Locs map" + locsMap);
 
-        // If there is a valid list of {@link Trip}s, then add them to the adapter's
-        // data set. This will trigger the ListView to update.
-        if (locsList != null && !locsList.isEmpty()) {
+            //https://developer.android.com/training/data-storage/files#java
+            try{
+                File file = File.createTempFile(langLocaleLong, null, context.getCacheDir());
+                FileOutputStream outputStream = openFileOutput(langLocaleLong, Context.MODE_PRIVATE);
+                //wrapping it into object output stream https://mkyong.com/java/how-to-write-an-object-to-file-in-java/
+                ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+                oos.writeObject(locationStrings);
+                outputStream.close();
+                oos.close();
 
-            Collections.sort(locsList);
-            adapterFrom.addAll(locsList);
-            adapterTo.addAll(locsList);
-            adapterTo.add("anywhere");
+            }catch (IOException e){
+                Log.e(LOG_TAG, "problems with a file in cacheDir " + e);
+            }
+
+
+
+            // If there is a valid list of {@link Trip}s, then add them to the adapter's
+            // data set. This will trigger the ListView to update.
+            if (locsList != null && !locsList.isEmpty()) {
+
+                Collections.sort(locsList);
+                adapterFrom.addAll(locsList);
+                adapterTo.addAll(locsList);
+                adapterTo.add("anywhere");
+            }
         }
-
-      //  else{
-      //      adapterFrom.addAll(locFrom);
-      //  }
     }
 
     @Override
