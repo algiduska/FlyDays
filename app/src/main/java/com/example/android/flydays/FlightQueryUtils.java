@@ -161,8 +161,11 @@ public final class FlightQueryUtils {
             //Convert tripJson String into a JSONObject
             JSONObject baseJsonResponse = new JSONObject(tripJSON);
 
-            //todo: need to get price for local currency and display that currency
-            //obsolete as it's always in EUR by default
+            JSONObject searchParam = baseJsonResponse.getJSONObject("search_params");
+            String destType = searchParam.getString("to_type");
+            Log.e(LOG_TAG, "destTYpe in FlightQueryUtils " + destType);
+
+            //obsolete as it's always in currency specified in a call by default -- GBP
             String currency = baseJsonResponse.getString("currency");
 
             //Extract “data” JSONArray
@@ -177,6 +180,8 @@ public final class FlightQueryUtils {
                 String bookingUrl = currentTrip.getString("deep_link");
                 String depCity = currentTrip.getString("cityFrom");
                 String arrCity = currentTrip.getString("cityTo");
+                JSONObject arrCountryObject = currentTrip.getJSONObject("countryTo");
+                String arrCountry = arrCountryObject.getString("name");
 
                 JSONObject duration = currentTrip.getJSONObject("duration");
                 long depDur = duration.getLong("departure");
@@ -199,9 +204,9 @@ public final class FlightQueryUtils {
                                 airlineCode, flightNo);
                     flights.add(flight);
                 }
-//todo: add currentTrip.getString("lang"); for locale
-                Trip trip = new Trip(flights, price, currency, bookingUrl, depCity, arrCity, depDur,
-                        retDur);
+
+                Trip trip = new Trip(flights, price, currency, destType, bookingUrl, depCity, arrCity, arrCountry,
+                        depDur, retDur);
                 trips.add(trip);
 
             }

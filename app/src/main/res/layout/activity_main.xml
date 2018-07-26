@@ -2,11 +2,17 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+<RelativeLayout
     android:id="@+id/main_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0099cc"
     android:focusableInTouchMode="true">
+
 
     <!-- The primary full-screen view. -->
     <LinearLayout
@@ -57,7 +63,6 @@
             android:padding="5dp"
             android:imeOptions="actionDone"
             android:clickable="true"
-            android:nextFocusForward="@+id/search_button"
             android:background="@android:color/white"
             android:textSize="24sp"/>
 
@@ -188,7 +193,6 @@
                 android:padding="5dp"
                 android:clickable="true"
                 android:imeOptions="actionDone"
-                android:nextFocusForward="@+id/search_button"
                 android:background="@android:color/white"
                 android:textSize="20sp" />
 
@@ -203,13 +207,31 @@
 
         </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/direct_checkbox"
-            android:layout_width="wrap_content"
-            android:layout_height="43dp"
-            android:text="@string/direct_only"
-            android:layout_marginTop="20dp"
-            android:textSize="20sp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/direct_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="43dp"
+                android:text="@string/direct_only"
+                android:layout_marginTop="20dp"
+                android:textSize="20sp"/>
+
+            <ImageView
+                android:id="@+id/filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="80dp"
+                android:src="@drawable/ic_filter_list_black_24dp" />
+
+        </LinearLayout>
+
+
 
 
     </LinearLayout>
@@ -221,10 +243,26 @@
         android:layout_height="wrap_content"
         android:text="@string/search_button"
         android:textSize="34sp"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
         android:textColor="@android:color/white"
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true" />
+
+
+</RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/activity_start"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/travel"
+            android:scaleType="centerInside"
+            android:layout_centerInParent="true"/>
+
+    </RelativeLayout>
 
 </RelativeLayout>

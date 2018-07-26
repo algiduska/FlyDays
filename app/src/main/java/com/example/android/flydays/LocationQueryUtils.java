@@ -182,14 +182,12 @@ public final class LocationQueryUtils {
                 String timezn = currentAirport.getString("timezone");
 
                 JSONObject city = currentAirport.getJSONObject("city");
-                String cityC = city.getString("id");
+                String cityC = city.getString("code"); //tried ID but that one didn't work for some cities
                 String cityN = city.getString("name");
                 JSONObject country = city.getJSONObject("country");
                 String countryC = country.getString("id");
                 String countryN = country.getString("name");
 
-                //Location location = new Location(airportC,airportN,cityC, cityN,countryC, countryN,
-                //        timezn);
 
                 //locations.add(location);
 

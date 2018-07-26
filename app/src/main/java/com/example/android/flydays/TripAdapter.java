@@ -33,7 +33,7 @@ public class TripAdapter extends ArrayAdapter<Trip> {
     //for format representation: https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
     //method used later for date formatting
     private String formatDate(Date dateObject) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd LLL");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd LLL");
         return dateFormat.format(dateObject);
     }
 
@@ -70,9 +70,20 @@ public class TripAdapter extends ArrayAdapter<Trip> {
             TextView destinationView = (TextView) listItemView.findViewById(R.id.destination_city);
             destinationView.setText(currentTrip.getArrCity());
 
-            TextView priceView = (TextView) listItemView.findViewById(R.id.trip_price);
-            priceView.setText("€"+String.valueOf(currentTrip.getPrice()));
+            //TextView destinationCountry = (TextView) listItemView.findViewById(R.id.destination_country);
+            //destinationCountry.setText(", " + currentTrip.getArrCountry());
 
+            String destType = currentTrip.getDestType();
+            Log.e(LOG_TAG, "destType type" + destType);
+
+
+            if(destType.equals("city") || destType.equals("airport") || destType.equals("country")){
+                destinationView.setVisibility(View.GONE);
+            }
+
+
+            TextView priceView = (TextView) listItemView.findViewById(R.id.trip_price);
+            priceView.setText("£"+String.valueOf(currentTrip.getPrice()));
 
             TextView depDurationView = (TextView) listItemView.findViewById(R.id.out_duration);
             depDurationView.setText(secToDuration(currentTrip.getDepDuration()));
@@ -109,9 +120,10 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 outArrAirportView.setText(outbound.getArrAirportCode());
 
                 //there must be *1000L as the time is in seconds and java works with milliseconds
-                //using + 3600000 as equivalent to 1 hour difference between our time and CZ?
-                Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L + 3600000);
-                Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L + 3600000);
+                //using - 3600000 as equivalent to 1 hour difference between our time and CZ?
+                //todo: check the times, now it shows hour less
+                Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
+                Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
 
 
                 TextView outDepTimeView = (TextView) listItemView.findViewById(R.id.out_dep_time);
@@ -138,8 +150,8 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 TextView retArrAirportView = (TextView) listItemView.findViewById(R.id.ret_arr_airport_code);
                 retArrAirportView.setText(returnn.getArrAirportCode());
 
-                Date retDeparture = new Date(returnn.getDepTimeInSeconds()*1000L);
-                Date retArrival = new Date(returnn.getArrTimeInSeconds()*1000L);
+                Date retDeparture = new Date(returnn.getDepTimeInSeconds()*1000L - 3600000);
+                Date retArrival = new Date(returnn.getArrTimeInSeconds()*1000L - 3600000);
 
                 TextView retDepTimeView = (TextView) listItemView.findViewById(R.id.ret_dep_time);
                 String retDepTime = formatTime(retDeparture);

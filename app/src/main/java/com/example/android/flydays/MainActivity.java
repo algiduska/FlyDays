@@ -24,10 +24,13 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 
 
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.example.android.flydays.FilterActivity.FilterDialogListener;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,15 +49,13 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-//todo: edit trip activity to show one way flights correctly
-//todo: create an introduction page (with logo) for location api to be called
-//todo: add extra filtering options
+
 //todo: create a custom adapter? to sort locations better
 //todo: toast if no departure day is selected or others missing?
     //https://stackoverflow.com/questions/11574752/autocompletetextview-doesnt-suggest-what-i-want
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderCallbacks<Location>{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderCallbacks<Location>, FilterDialogListener{
 
     AutoCompleteTextView locFromView;
     AutoCompleteTextView locToView;
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     CheckBox oneWayOnly;
     EditText daysInText;
     Button searchButton;
+    ImageView filter;
+    View introView;
 
 
     String langLocale;
@@ -109,6 +112,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Context context;
 
+    private String outDepMin = "00:00";
+    private String outDepMax = "00:00";
+    private String outArrMin = "00:00";
+    private String outArrMax = "00:00";
+    private String retDepMin = "00:00";
+    private String retDepMax = "00:00";
+    private String retArrMin = "00:00";
+    private String retArrMax = "00:00";
+
 
 
 //***************************************************************************************************
@@ -122,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //muscardinus at https://stackoverflow.com/questions/4212320/get-the-current-language-in-device
         langLocale = Locale.getDefault().getLanguage();
         langLocaleLong = Locale.getDefault().getDisplayLanguage();
+        Log.e(LOG_TAG, "langLocaleLong is " + langLocaleLong);
 
 
 /*      todo: make location work
@@ -139,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         myLocation.getLocation(this, locationResult);
 */
 
+        introView = findViewById(R.id.activity_start);
 
         minDateText = findViewById(R.id.departure_min);
         //todo: maxDateText might not be within the range, change the wording or not let corresponding depString pass?
@@ -256,9 +270,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         try{
             //https://developer.android.com/training/data-storage/files#java
-            FileInputStream fileISteram = openFileInput(langLocaleLong);
+            FileInputStream fileIStream = openFileInput(langLocaleLong);
             //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/
-            ObjectInputStream ois = new ObjectInputStream(fileISteram);
+            ObjectInputStream ois = new ObjectInputStream(fileIStream);
             Location location = (Location) ois.readObject();
             locsMap = location.getLocsMap();
             locsList = location.getLocsList();
@@ -266,6 +280,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             adapterFrom.addAll(locsList);
             adapterTo.addAll(locsList);
             adapterTo.add("anywhere");
+
+            //wait for a moment before the view is set GONE
+            //https://stackoverflow.com/questions/22194761/hide-textview-after-some-time-in-android
+            introView.postDelayed(new Runnable() {
+                public void run() {
+                    introView.setVisibility(View.GONE);
+                }
+            }, 1000);
+
+
+            //extra for my own debugging
+            String listFiles [] = fileList();
+            Log.e(LOG_TAG, "file was found under langlocalelong: " + langLocaleLong);
+            //Log.e(LOG_TAG, "file list: " + listFiles[0]);
+            //Log.e(LOG_TAG, "file list: " + listFiles[1]);
 
         }catch(Exception e) {
             Log.e(LOG_TAG, "exception in reading the cached file" + e);
@@ -309,6 +338,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         maxDateText.getText().clear();
         dirOnlyBox.toggle();
 
+        filter = findViewById(R.id.filter);
+        filter.setOnClickListener(this);
+
 
     }
 
@@ -338,6 +370,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.e(LOG_TAG, "depDates string " + depDates);
                 Log.e(LOG_TAG, "retDates string " + retDates);
 
+                Log.e(LOG_TAG, "outDepMin " + outDepMin);
+                Log.e(LOG_TAG, "retDepMin " + retDepMin);
+
 
                 Intent search = new Intent(MainActivity.this, TripActivity.class);
 
@@ -348,6 +383,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //Add your data to bundle
                 bundle.putString("dloc", (locsMap.get((locFromView.getText()).toString())));
                 bundle.putString("hloc", (locsMap.get((locToView.getText()).toString())));
+                bundle.putString("dlocn", (locFromView.getText()).toString());
+                bundle.putString("hlocn", (locToView.getText()).toString());
                 bundle.putString("ddate", (minDateText.getText()).toString());
                 //todo: make a toast message if rdate is before ddate
                 bundle.putString("rdate", (maxDateText.getText()).toString());
@@ -357,6 +394,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bundle.putString("lang", langLocale);
                 bundle.putString("dstring", depDates);
                 bundle.putString("rstring", retDates);
+                bundle.putString("oDMin", outDepMin);
+                bundle.putString("oDMax", outDepMax);
+                bundle.putString("oAMin", outArrMin);
+                bundle.putString("oAMax", outArrMax);
+                bundle.putString("rDMin", retDepMin);
+                bundle.putString("rDMax", retDepMax);
+                bundle.putString("rAMin", retArrMin);
+                bundle.putString("rAMax", retArrMax);
 
 
                 //Add the bundle to the intent
@@ -457,12 +502,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 setFocus(btn_unfocus, btn[6]);
                 dayWanted=1;
                 break;
+            case R.id.filter :
+                openDialog();
+                /*
+                Intent filterInt = new Intent(MainActivity.this, FilterActivity.class);
+                startActivity(filterInt);
+                break;
+                */
             default:
                 Log.e(LOG_TAG, "OnClick went to default");
                 break;
         }
     }
 //************************************METHODS********************************************************
+
+    /**
+     * opens a dialog to insert time filters
+     * on how to create a dialog: https://youtube.com/watch?v=ARezg1D9Zd0
+     */
+    public void openDialog(){
+        FilterActivity filterAct = new FilterActivity();
+        filterAct.show(getSupportFragmentManager(),"Filter");
+    }
+
+    /**
+     * Data being sent from the dialog/FilterAtivity and then assigned to local variables.
+     * This data will be passed in a bundle to form a filtered API call.
+     * If the filter was never open variables will already be initialised on its API spec default value
+     * If the flight is one way, the return part is ignored by API call but can be included
+     */
+    @Override
+    public void sendData(String outDepMin, String outDepMax, String outArrMin, String outArrMax,
+                         String retDepMin, String retDepMax, String retArrMin, String retArrMax) {
+        this.outDepMax=outDepMax;
+        this.outDepMin=outDepMin;
+        this.outArrMax=outArrMax;
+        this.outArrMin=outArrMin;
+        this.retDepMax=retDepMax;
+        this.retDepMin=retDepMin;
+        this.retArrMax=retArrMax;
+        this.retArrMin=retArrMin;
+    }
+
     /**
      * Makes functionality for weekday buttons to be selected and deselected with following colours
      * @param btn_unfocus
@@ -560,8 +641,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 // https://api.skypicker.com/locations?type=dump&locale=en-US&location_types=airport&
 // location_types=city&location_types=country&limit=10&sort=name&active_only=true
+
+        //the locale is unimportant as they all return same names
         uriBuilder.appendQueryParameter("type", "dump");
-        uriBuilder.appendQueryParameter("locale", langLocale);
+        uriBuilder.appendQueryParameter("locale", Locale.getDefault().toString()); //it's en_US format
         uriBuilder.appendQueryParameter("location_types", "airport");
         uriBuilder.appendQueryParameter("limit", "10000");
         uriBuilder.appendQueryParameter("sort", "name");
@@ -576,6 +659,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLoadFinished(Loader<Location> lLoader, Location locationStrings) {
+
+        introView.setVisibility(View.GONE);
 
         // Clear the adapter of previous earthquake data
         adapterFrom.clear();

@@ -24,8 +24,7 @@ import java.util.Scanner;
 
 public class TripActivity extends AppCompatActivity implements LoaderCallbacks<List<Trip>> {
 
-    //todo: make as many calls as required
-    //todo: order the results of the calls by price
+//todo: PROBLEM with API calls for 'anywhere' as only the cheapest flights are listed for each destination which means that when I filter them by time there are not many left
 
     /** base URL for trip data from the Kiwi dataset */
     private static final String FLIGHT_REQUEST_URL =
@@ -47,8 +46,10 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     private String depLoc;
     private String holLoc;
-    private String depDate;
-    private String retDate;
+    private String depLocName;
+    private String holLocName;
+    private String fromDate;
+    private String toDate;
     private boolean dirOnly;
     private boolean oneWay;
     private String langLoc;
@@ -56,6 +57,18 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     private String retString;
     private ArrayList<String> depDates = new ArrayList<>();
     private ArrayList<String> retDates = new ArrayList<>();
+
+    private String outDepMin;
+    private String outDepMax;
+    private String outArrMin;
+    private String outArrMax;
+    private String retDepMin;
+    private String retDepMax;
+    private String retArrMin;
+    private String retArrMax;
+
+    private TextView cityToCity;
+    private TextView dateToDate;
 
         /**
      * Creates the url based on established preferences and uses it for API call to update
@@ -77,7 +90,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         locale=en&partner=picky&price_to=100&limit=30&sort=price&asc=1
          */
 
-        //todo: put his in a method with params for array lists of dates
+
         //todo: if there isn't return it would throw nullpointer exception --> fix
         uriBuilder.appendQueryParameter("flyFrom", depLoc);
         uriBuilder.appendQueryParameter("to", holLoc);
@@ -88,8 +101,19 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         uriBuilder.appendQueryParameter("typeFlight", onewayOnly);
         uriBuilder.appendQueryParameter("directFlights", directOrNot);
         uriBuilder.appendQueryParameter("locale", langLoc);
+        uriBuilder.appendQueryParameter("dtimefrom", outDepMin);
+        uriBuilder.appendQueryParameter("dtimeto", outDepMax);
+        uriBuilder.appendQueryParameter("atimefrom",outArrMin);
+        uriBuilder.appendQueryParameter("atimeto", outArrMax);
+        uriBuilder.appendQueryParameter("returndtimefrom", retDepMin);
+        uriBuilder.appendQueryParameter("returndtimeto", retDepMax);
+        uriBuilder.appendQueryParameter("returnatimefrom",retArrMin);
+        uriBuilder.appendQueryParameter("returnatimeto", retArrMax);
         uriBuilder.appendQueryParameter("partner", "picky");
-        uriBuilder.appendQueryParameter("limit", "30");
+        uriBuilder.appendQueryParameter("curr", "GBP");
+        //uriBuilder.appendQueryParameter("selectedAirlines", "BA,IB,AY");
+        //uriBuilder.appendQueryParameter("selectedAirlinesExclude", "False");
+        uriBuilder.appendQueryParameter("limit", "100");
         uriBuilder.appendQueryParameter("sort", "price");
         uriBuilder.appendQueryParameter("asc", "1");
 
@@ -138,6 +162,8 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     protected void onCreate(Bundle savedInstanceState) {
         Log.e(LOG_TAG, "onCreate started");
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.trip_activity);
+
         /**
          * data from the MainActivity passed through the bundle
          */
@@ -146,16 +172,28 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         //Extract the data…
         depLoc = bundle.getString("dloc");
         holLoc = bundle.getString("hloc");
-        depDate = bundle.getString("ddate");
-        retDate = bundle.getString("rdate");
+        depLocName = bundle.getString("dlocn");
+        holLocName = bundle.getString("hlocn");
+        fromDate = bundle.getString("ddate");
+        toDate = bundle.getString("rdate");
         dirOnly = bundle.getBoolean("dir");
         oneWay = bundle.getBoolean("ow");
         langLoc = bundle.getString("lang");
         depString = bundle.getString("dstring");
         retString = bundle.getString("rstring");
+        outDepMax = bundle.getString("oDMax");
+        outDepMin = bundle.getString("oDMin");
+        outArrMax = bundle.getString("oAMax");
+        outArrMin = bundle.getString("oAMin");
+        retDepMax = bundle.getString("rDMax");
+        retDepMin = bundle.getString("rDMin");
+        retArrMax = bundle.getString("rAMax");
+        retArrMin = bundle.getString("rAMin");
+
+        //Log.e(LOG_TAG, "testMin from tripactivity (1000): " + testMin);
+        //Log.e(LOG_TAG, "testMax from tripactivity (2200): " + testMax);
 
         Log.e(LOG_TAG, "depString passed into trip activity" + depString);
-
 
         Scanner sD = new Scanner(depString);
         while(sD.hasNext()){
@@ -172,13 +210,22 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         Log.e(LOG_TAG, "retDates arrayList: " + retDates);
 
 
-        setContentView(R.layout.trip_activity);
+
+        cityToCity = (TextView) findViewById(R.id.city_to_city);
+        dateToDate = (TextView) findViewById(R.id.date_to_date);
+        String cToC = depLocName + " to " + holLocName;
+        cityToCity.setText(cToC);
+        String dToD = "between " + fromDate + " and " + toDate;
+        dateToDate.setText(dToD);
+
+        //todo: add on click listener on cityToCity and DateToDate to go back to search options and make filter to remember preferences
 
         Log.e(LOG_TAG, "bundle extras out");
         Log.e(LOG_TAG, "depLoc is " + depLoc);
 
         // Find a reference to the {@link ListView} in the layout
         ListView tripListView = (ListView) findViewById(R.id.list);
+
 
         // Create a new adapter that takes the list of trips as input
         tAdapter = new TripAdapter(this, new ArrayList<Trip>());
