@@ -77,5 +77,6 @@ public class Trip {
         return flights;
     }
 
+
 }
 

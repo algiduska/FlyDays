@@ -504,11 +504,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.filter :
                 openDialog();
-                /*
-                Intent filterInt = new Intent(MainActivity.this, FilterActivity.class);
-                startActivity(filterInt);
-                break;
-                */
             default:
                 Log.e(LOG_TAG, "OnClick went to default");
                 break;

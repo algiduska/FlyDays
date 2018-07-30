@@ -1,9 +1,12 @@
 package com.example.android.flydays;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.net.ConnectivityManager;
@@ -11,14 +14,18 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -69,6 +76,52 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     private TextView cityToCity;
     private TextView dateToDate;
+
+    private String depCity;
+    private String holCity;
+    private String toCountry;
+    private String airFromOutC;
+    private String airToOutC;
+    private String airFromRetC;
+    private String airToRetC;
+    private String airlineOutC;
+    private String airlineBackC;
+    private String durationOut;
+    private String durationRet;
+    private String depTimeOut;
+    private String arrTimeOut;
+    private String depTimeRet;
+    private String arrTimeRet;
+    private String depDateOut;
+    private String arrDateOut;
+    private String depDateRet;
+    private String arrDateRet;
+
+    private Trip currentTrip;
+
+    public Trip getCurrentTrip(){
+        return this.currentTrip;
+    }
+
+
+
+    //some methods needed for dialog
+    private String formatDate(Date dateObject) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
+        return dateFormat.format(dateObject);
+    }
+
+    private String formatTime(Date dateObject) {
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+        return timeFormat.format(dateObject);
+    }
+
+    private String secToDuration(long seconds){
+        long hours = seconds/3600;
+        long minutes = (seconds % 3600)/60;
+        return hours + "h " + minutes + "m";
+    }
+
 
         /**
      * Creates the url based on established preferences and uses it for API call to update
@@ -237,12 +290,104 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
         tripListView.setEmptyView(mEmptyStateTextView);
 
+        //************************************* dialog fragment **********************************
+
         tripListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // Find the current earthquake that was clicked on
+                // Find the current trip that was clicked on
                 Trip currentTrip = tAdapter.getItem(position);
 
+                SummaryDialog summary = new SummaryDialog();
+
+                Bundle bundle = new Bundle();
+
+                //getting all the data from the adapter to be passed to the dialog
+                bundle.putString("uri", currentTrip.getBookingURL());
+                bundle.putString("depc", currentTrip.getDepCity());
+                bundle.putString("holc", currentTrip.getArrCity());
+                bundle.putString("country", currentTrip.getArrCountry());
+                bundle.putInt("price", currentTrip.getPrice());
+
+                List<Flight> flights = currentTrip.getFlights();
+                Flight outbound = null;
+                Flight returnn = null;
+
+
+                if(flights.size()>=2) {
+                    bundle.putBoolean("return", true);
+                    outbound = flights.get(0);
+                    bundle.putString("airFO", outbound.getDepAirportCode());
+                    bundle.putString("airTO", outbound.getArrAirportCode());
+                    bundle.putString("airlineO", outbound.getAirlineCode());
+
+                    durationOut = secToDuration(currentTrip.getDepDuration());
+                    bundle.putString("durO", durationOut);
+                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
+                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
+                    depTimeOut = formatTime(outDeparture);
+                    arrTimeOut = formatTime(outArrival);
+                    depDateOut = formatDate(outDeparture);
+                    arrDateOut = formatDate(outArrival);
+                    Log.e(LOG_TAG, "arrDateOut is: " + arrDateOut);
+
+                    bundle.putString("timeDO", depTimeOut);
+                    bundle.putString("timeAO", arrTimeOut);
+                    bundle.putString("dateDO", depDateOut);
+                    bundle.putString("dateAO", arrDateOut);
+
+                    returnn = flights.get(1);
+                    bundle.putString("airFR", returnn.getDepAirportCode());
+                    bundle.putString("airTR", returnn.getArrAirportCode());
+                    bundle.putString("airlineR", returnn.getAirlineCode());
+
+                    durationRet = secToDuration(currentTrip.getRetDuration());
+                    bundle.putString("durR", durationRet);
+                    Date retDeparture = new Date(returnn.getDepTimeInSeconds()*1000L - 3600000);
+                    Date retArrival = new Date(returnn.getArrTimeInSeconds()*1000L - 3600000);
+                    depTimeRet = formatTime(retDeparture);
+                    arrTimeRet = formatTime(retArrival);
+                    depDateRet = formatDate(retDeparture);
+                    arrDateRet = formatDate(retArrival);
+                    Log.e(LOG_TAG, "arrDateRet is: " + arrDateRet);
+
+                    bundle.putString("timeDR", depTimeRet);
+                    bundle.putString("timeAR", arrTimeRet);
+                    bundle.putString("dateDR", depDateRet);
+                    bundle.putString("dateAR", arrDateRet);
+
+                    summary.setArguments(bundle);
+                    summary.show(getSupportFragmentManager(),"Summary");
+
+                }else if (flights.size()==1) {
+                    bundle.putBoolean("return", false);
+                    outbound = flights.get(0);
+                    bundle.putString("airFO", outbound.getDepAirportCode());
+                    bundle.putString("airTO", outbound.getArrAirportCode());
+                    bundle.putString("airlineO", outbound.getAirlineCode());
+
+                    durationOut = secToDuration(currentTrip.getDepDuration());
+                    bundle.putString("durO", durationOut);
+                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
+                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
+                    depTimeOut = formatTime(outDeparture);
+                    arrTimeOut = formatTime(outArrival);
+                    depDateOut = formatDate(outDeparture);
+                    arrDateOut = formatDate(outArrival);
+
+                    bundle.putString("timeDO", depTimeOut);
+                    bundle.putString("timeAO", arrTimeOut);
+                    bundle.putString("dateDO", depDateOut);
+                    bundle.putString("dateAO", arrDateOut);
+
+                    summary.setArguments(bundle);
+                    summary.show(getSupportFragmentManager(),"Summary");
+                }else {
+                    outbound = null;
+                }
+
+
+                /*
                 // Convert the String URL into a URI object (to pass into the Intent constructor)
                 Uri bookingUri = Uri.parse(currentTrip.getBookingURL());
 
@@ -251,8 +396,11 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
                 // Send the intent to launch a new activity
                 startActivity(websiteIntent);
+                */
             }
         });
+
+        //********************************** Networking *******************************************
 
 
         // Get a reference to the ConnectivityManager to check state of network connectivity
@@ -297,3 +445,4 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         */
     }
 }
+

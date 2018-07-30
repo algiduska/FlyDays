@@ -23,7 +23,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio1/plugins/android/lib/android.jar!/images/material_design_icons/navigation/ic_chevron_left_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio1/plugins/android/lib/android.jar!/images/material_design_icons/device/ic_access_time_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -33,11 +33,11 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="height" value="12" />
-                            <entry key="outputName" value="ic_chevron_left_12dp" />
+                            <entry key="height" value="16" />
+                            <entry key="outputName" value="ic_time_16dp" />
                             <entry key="overrideSize" value="true" />
                             <entry key="sourceFile" value="C:\Users\Marvin" />
-                            <entry key="width" value="12" />
+                            <entry key="width" value="16" />
                           </map>
                         </option>
                       </PersistentState>

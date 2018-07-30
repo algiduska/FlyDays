@@ -74,10 +74,10 @@ public class TripAdapter extends ArrayAdapter<Trip> {
             //destinationCountry.setText(", " + currentTrip.getArrCountry());
 
             String destType = currentTrip.getDestType();
-            Log.e(LOG_TAG, "destType type" + destType);
+            //Log.e(LOG_TAG, "destType type" + destType);
 
 
-            if(destType.equals("city") || destType.equals("airport") || destType.equals("country")){
+            if(destType.equals("city") || destType.equals("airport")){
                 destinationView.setVisibility(View.GONE);
             }
 

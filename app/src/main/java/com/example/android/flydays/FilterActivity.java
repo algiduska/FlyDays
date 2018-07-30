@@ -165,11 +165,19 @@ public class FilterActivity extends AppCompatDialogFragment {
         }
     }
 
+    /**
+     * sends the data from filterActivity by implementing it in Main activity thus making
+     * the data is accessible
+     */
     public interface FilterDialogListener{
         void sendData(String outDepMin, String outDepMax, String outArrMin, String outArrMax,
                       String retDepMin, String retDepMax, String retArrMin, String retArrMax);
     }
 
+    /**
+     * sets variables for each range bar
+     * @param rangebar
+     */
     public void setVariables(RangeBar rangebar){
         rangebar.setTickCount(48 + 1); //need to start with +1 as a regular index value
         rangebar.setTickHeight(0);
