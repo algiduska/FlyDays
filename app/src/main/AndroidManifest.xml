@@ -22,7 +22,7 @@
         </activity>
         <activity android:name=".TripActivity"
             android:label="@string/trip_search_results"/>
-        <activity android:name=".FilterActivity"/>
+        <activity android:name=".FilterDialog"/>
 
     </application>
 

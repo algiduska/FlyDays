@@ -18,7 +18,7 @@ import com.edmodo.rangebar.RangeBar;
 import java.text.DecimalFormat;
 
 
-public class FilterActivity extends AppCompatDialogFragment {
+public class FilterDialog extends AppCompatDialogFragment {
 
     private TextView outDepMinView;
     private TextView outDepMaxView;
@@ -183,5 +183,10 @@ public class FilterActivity extends AppCompatDialogFragment {
         rangebar.setTickHeight(0);
         rangebar.setThumbRadius(8);
         rangebar.setConnectingLineWeight(3);
+        //requires android colour - https://convertingcolors.com/hex-color-99B898.html
+        rangebar.setBarColor(0xFF99B898);
+        rangebar.setConnectingLineColor(0xFF99B898);
+        rangebar.setThumbColorNormal(0xFF99B898);
+        rangebar.setThumbColorPressed(0xFF99B898);
     }
 }

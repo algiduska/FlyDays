@@ -10,10 +10,8 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.http.HttpResponseCache;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -26,17 +24,14 @@ import android.widget.EditText;
 
 import android.widget.ImageView;
 import android.widget.ListAdapter;
-import android.widget.MultiAutoCompleteTextView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.example.android.flydays.FilterActivity.FilterDialogListener;
+import com.example.android.flydays.FilterDialog.FilterDialogListener;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -48,7 +43,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 //todo: create a custom adapter? to sort locations better
 //todo: toast if no departure day is selected or others missing?
@@ -61,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     AutoCompleteTextView locToView;
     EditText minDateText;
     EditText maxDateText;
-    CheckBox dirOnlyBox;
+    //CheckBox dirOnlyBox;
     CheckBox oneWayOnly;
     EditText daysInText;
     Button searchButton;
@@ -161,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         minDateText.setOnClickListener(this);
         maxDateText.setOnClickListener(this);
 
-        dirOnlyBox = findViewById(R.id.direct_checkbox);
+        //dirOnlyBox = findViewById(R.id.direct_checkbox);
 
         daysInText = (EditText) findViewById(R.id.days_in);
         oneWayOnly = findViewById(R.id.one_way);
@@ -287,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void run() {
                     introView.setVisibility(View.GONE);
                 }
-            }, 1000);
+            }, 1500);
 
 
             //extra for my own debugging
@@ -336,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         locToView.getText().clear();
         minDateText.getText().clear();
         maxDateText.getText().clear();
-        dirOnlyBox.toggle();
+        //dirOnlyBox.toggle();
 
         filter = findViewById(R.id.filter);
         filter.setOnClickListener(this);
@@ -389,7 +383,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //todo: make a toast message if rdate is before ddate
                 bundle.putString("rdate", (maxDateText.getText()).toString());
                 //bundle.putString("days", daysInText.getText().toString());
-                bundle.putBoolean("dir", dirOnlyBox.isChecked());
+                bundle.putBoolean("dir", true);
+                //bundle.putBoolean("dir", dirOnlyBox.isChecked());
                 bundle.putBoolean("ow", oneWayOnly.isChecked());
                 bundle.putString("lang", langLocale);
                 bundle.putString("dstring", depDates);
@@ -516,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * on how to create a dialog: https://youtube.com/watch?v=ARezg1D9Zd0
      */
     public void openDialog(){
-        FilterActivity filterAct = new FilterActivity();
+        FilterDialog filterAct = new FilterDialog();
         filterAct.show(getSupportFragmentManager(),"Filter");
     }
 
@@ -548,7 +543,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_unfocus.setTextColor(getResources().getColor(R.color.black));
         btn_unfocus.setBackgroundColor(getResources().getColor(R.color.white));
         btn_focus.setTextColor(getResources().getColor(R.color.white));
-        btn_focus.setBackgroundColor(getResources().getColor(R.color.colorPrimary));  //blue
+        btn_focus.setBackgroundColor(getResources().getColor(R.color.colorAccent));  //blue
         this.btn_unfocus = btn_focus;
     }
 
@@ -565,7 +560,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Finds dates and creates an array of possible departure dates (outbound&inbound) in milliseconds
      */
-    //todo: deal with situation such as dayweek 7, dayWantd 6, daysIn int 2 - flying friday not sunday
     private void getReturnDates(long min, long max, int dayWeek, int dayWanted, int daysIn){
         //need to delete the string otherwise it would add to it after going back from results in the app
         depDates="";

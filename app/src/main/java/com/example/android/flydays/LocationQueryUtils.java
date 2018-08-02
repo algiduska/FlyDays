@@ -196,7 +196,7 @@ public final class LocationQueryUtils {
                 locsMap.put(cityN, cityC);
                 locsMap.put(countryN, countryC);
 
-                //todo: add the locations here and use this set for the adapter ---> how to map city to code etc?
+
                 //map object
                 // distinct list --> set https://stackoverflow.com/questions/13429119/get-unique-values-from-arraylist-in-java
                 // making my own list

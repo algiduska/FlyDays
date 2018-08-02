@@ -119,6 +119,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="13:05" />
 
                         <TextView
@@ -127,6 +128,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="14/09/2018" />
 
                         <View
@@ -141,6 +143,7 @@
                             android:layout_gravity="end"
                             android:layout_marginRight="16dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="London" />
 
                     </LinearLayout>
@@ -237,6 +240,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
                                 android:textSize="20sp"
+                                android:textColor="@color/black"
                                 tools:text="14:20" />
 
                             <TextView
@@ -245,6 +249,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
                                 android:textSize="20sp"
+                                android:textColor="@color/black"
                                 tools:text="14/09/2018" />
 
                             <View
@@ -258,6 +263,7 @@
                                 android:layout_height="match_parent"
                                 android:layout_gravity="end"
                                 android:layout_marginRight="16dp"
+                                android:textColor="@color/black"
                                 android:textSize="20sp"
                                 tools:text="Hamburg" />
 
@@ -333,6 +339,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="13:05" />
 
                         <TextView
@@ -341,6 +348,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="14/09/2018" />
 
                         <View
@@ -355,6 +363,7 @@
                             android:layout_gravity="end"
                             android:layout_marginRight="16dp"
                             android:textSize="20sp"
+                            android:textColor="@color/black"
                             tools:text="London" />
 
                     </LinearLayout>
@@ -451,6 +460,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
                                 android:textSize="20sp"
+                                android:textColor="@color/black"
                                 tools:text="14:20" />
 
                             <TextView
@@ -459,6 +469,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
                                 android:textSize="20sp"
+                                android:textColor="@color/black"
                                 tools:text="14/09/2018" />
 
                             <View
@@ -473,6 +484,7 @@
                                 android:layout_gravity="end"
                                 android:layout_marginRight="16dp"
                                 android:textSize="20sp"
+                                android:textColor="@color/black"
                                 tools:text="Hamburg" />
 
                         </LinearLayout>
