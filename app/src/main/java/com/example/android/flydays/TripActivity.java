@@ -421,7 +421,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
             // initialises the actual loader with first 3 methods in this class (one calling triploader)
             // and does that for each date pair --> each having own loader to execute on the background
-                        for(int x = 0; x < depDates.size(); x++) {
+            for(int x = 0; x < depDates.size(); x++) {
                 trip_loader_id = x;
                 loaderManager.initLoader(trip_loader_id, null, this);
             }
@@ -438,11 +438,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
 
         //TODO: deal with http 400 response code
 
-        // Start the AsyncTask to fetch the earthquake data
-        /*
-        EarthquakeAsyncTask task = new EarthquakeAsyncTask();
-        task.execute(USGS_REQUEST_URL);
-        */
+
     }
 }
 

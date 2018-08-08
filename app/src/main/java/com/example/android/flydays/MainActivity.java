@@ -1,5 +1,6 @@
 package com.example.android.flydays;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -26,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.flydays.FilterDialog.FilterDialogListener;
 
@@ -44,10 +47,11 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-//todo: create a custom adapter? to sort locations better
+//todo: create a custom adapter to sort locations better?
 //todo: toast if no departure day is selected or others missing?
     //https://stackoverflow.com/questions/11574752/autocompletetextview-doesnt-suggest-what-i-want
 
+//to clear cache - Tools -> AVD Manager -> wipe data
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderCallbacks<Location>, FilterDialogListener{
 
@@ -61,7 +65,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button searchButton;
     ImageView filter;
     View introView;
-
+    View noInternet;
+    RelativeLayout myPage;
 
     String langLocale;
     String langLocaleLong;
@@ -123,6 +128,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //todo: change in report -- now if there is no internet it would say it
+        // set visibility to GONE if there is no internet (unless there is cached data)
+        noInternet = findViewById(R.id.no_internet);
+        noInternet.setVisibility(View.GONE);
         context = getApplicationContext();
 
         //muscardinus at https://stackoverflow.com/questions/4212320/get-the-current-language-in-device
@@ -148,9 +157,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         introView = findViewById(R.id.activity_start);
 
-        minDateText = findViewById(R.id.departure_min);
-        //todo: maxDateText might not be within the range, change the wording or not let corresponding depString pass?
-        maxDateText = findViewById(R.id.departure_max);
+        minDateText = findViewById(R.id.trip_date_min);
+        maxDateText = findViewById(R.id.trip_date_max);
 
         minDateText.setOnClickListener(this);
         maxDateText.setOnClickListener(this);
@@ -203,10 +211,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         locToView.setAdapter(adapterTo);
 
         //disabling focus when the activity starts (no blicking cursor) - https://stackoverflow.com/questions/6117967/how-to-remove-focus-without-setting-focus-to-another-control
-        RelativeLayout myPage = (RelativeLayout) findViewById(R.id.main_view);
+        myPage = (RelativeLayout) findViewById(R.id.main_view);
         myPage.requestFocus();
 
-//todo: order them!
+
         /**
          * sets null unless something is chosen from the list
          */
@@ -217,18 +225,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onFocusChange(View view, boolean b) {
                 if (!b) {
-                    //locFromView.setFocusable(false);
-                    String str = locFromView.getText().toString();
 
+                    String str = locFromView.getText().toString();
                     ListAdapter listAdapter = locFromView.getAdapter();
                     for (int i = 0; i < listAdapter.getCount(); i++) {
                         String temp = listAdapter.getItem(i).toString();
-                        if (str.compareTo(temp) == 0) {
+                        if (str.compareTo(temp) == 0) { // if str==temp
+                            // todo: hide keyboard after an item is selected - this one doesn't work
+                            hideKeyboardFrom(context, view);
                             return;
                         }
                     }
-                    //set the first one on the list
                     locFromView.setText(null);
+                    Toast.makeText(MainActivity.this, "Please select location from the list.",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -247,8 +257,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             return;
                         }
                     }
-                    //set the first one on the list
                     locToView.setText(null);
+                    Toast.makeText(MainActivity.this, "Please select location from the list.",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -310,12 +321,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // because this activity implements the LoaderCallbacks interface).
                 loaderManager.initLoader(LOCATION_LOADER_ID, null, this);
             } else {
-                // First, hide loading indicator so error message will be visible
-                View loadingIndicator = findViewById(R.id.loading_spinner);
-                loadingIndicator.setVisibility(View.GONE);
-
-                //todo: set an empty view to "no internet"
-
+                //if no connection make it visible on the main page
+                noInternet.setVisibility(View.VISIBLE);
             }
         }
 
@@ -350,14 +357,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
 
             case R.id.search_button:
+                //todo: change in report -- request focus to ensure user doesn't write something outside of the locs list and press search
+                //todo: change in report -- so instead focus will change which will cause the field to be empty and show toast 2x with instructions
+                //focus goes to whole layout and if one of the locations is missing it shows the toast from onFocusChange followed by toast from here
+                //Originally it went to the search button but that caused that double click was needed to proceed to results.
+                myPage.requestFocus();
+                //checks for various errors and displaying toast if something is not correct
+                //todo: change in report -- various exceptions avoided
+                if ((locFromView.getText().toString()).equals("")){
+                    Toast.makeText(MainActivity.this, "Please enter departure location.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if ((locToView.getText().toString()).equals("")){
+                    Toast.makeText(MainActivity.this, "Please enter holiday location. Select 'anywhere' for all destinations.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if( min==0 || max==0 ){
+                    //might happen when going back from Trip Activity and although text is there, dates are not selected
+                    minDateText.setText(null);
+                    maxDateText.setText(null);
+                    Toast.makeText(MainActivity.this, "Please enter date range for your trip availability.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if (min > max){
+                    Toast.makeText(MainActivity.this, "Minimum date range is after maximum. Please change the dates.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if(dayWanted!=1 && dayWanted!=2 && dayWanted!=3 && dayWanted!=4 && dayWanted!=5 && dayWanted!=6 && dayWanted!=7){
+                    Toast.makeText(MainActivity.this, "Please set day of week for departure.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if ((daysInText.getText().toString()).equals("")){
+                    Toast.makeText(MainActivity.this, "Please enter days in destination or tick One way checkbox.",
+                            Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                else if (!isStringInt(daysInText.getText().toString())){
+                    if (!(daysInText.getText().toString()).equals("oneway")) {
+                        Toast.makeText(MainActivity.this, "Incorrect value of Days in destination. Please select a number or tick One way checkbox for 'oneway' option.",
+                                Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                }
+                else if (oneWayOnly.isChecked() && !(daysInText.getText().toString()).equals("oneway")){
+                    Toast.makeText(MainActivity.this, "Please either untick the One way checkbox or set Days in destination to 'oneway'.",
+                            Toast.LENGTH_LONG).show();
+                    break;
+                }
+
                 //activating methods to retrieve all possible dates that will be passed to tripactivity
-
-
                 if (!oneWayOnly.isChecked()) {
                     daysIn = Integer.parseInt(daysInText.getText().toString());
                     getReturnDates(min, max, dayWeek, dayWanted, daysIn);
 
-                }else{
+                } else {
                     getOnewayDates(min, max, dayWeek, dayWanted);
                 }
 
@@ -380,7 +438,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bundle.putString("dlocn", (locFromView.getText()).toString());
                 bundle.putString("hlocn", (locToView.getText()).toString());
                 bundle.putString("ddate", (minDateText.getText()).toString());
-                //todo: make a toast message if rdate is before ddate
                 bundle.putString("rdate", (maxDateText.getText()).toString());
                 //bundle.putString("days", daysInText.getText().toString());
                 bundle.putBoolean("dir", true);
@@ -403,9 +460,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 search.putExtras(bundle);
 
                 startActivity(search);
+
                 break;
 
-            case R.id.departure_min:
+            case R.id.trip_date_min:
                 //https://stackoverflow.com/questions/14933330/datepicker-how-to-popup-datepicker-when-click-on-edittext
                 //code from Mohsin Bhat to add calendar dialog
 
@@ -433,7 +491,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 datePickerDialog.setTitle("");
                 datePickerDialog.show();
                 break;
-            case R.id.departure_max:
+
+            case R.id.trip_date_max:
                 //activate the dialogue
                 datePickerDialog2 = new DatePickerDialog(this,
                         new DatePickerDialog.OnDateSetListener() {
@@ -459,10 +518,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 datePickerDialog2.setTitle("");
                 datePickerDialog2.show();
                 break;
+
             case R.id.one_way :
                 if(oneWayOnly.isChecked())
                     daysInText.setText("oneway", TextView.BufferType.EDITABLE);
                 break;
+
             case R.id.btn0 :
                 setFocus(btn_unfocus, btn[0]);
                 dayWanted=2;
@@ -505,6 +566,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 //************************************METHODS********************************************************
+
+    /**
+     * checks if days in destination is indeed an integer
+     * source: inspired by Ryan Amos at https://stackoverflow.com/questions/12558206/how-can-i-check-if-a-value-is-of-type-integer
+     */
+    public boolean isStringInt(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        }catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Method that hides keyboard from a view.
+     * Might throw null pointer exception so view association is crucial.
+     * source: https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
+     * @param context
+     * @param view
+     */
+    public static void hideKeyboardFrom(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
 
     /**
      * opens a dialog to insert time filters
@@ -552,6 +639,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String makeDateString(long dateInMilli) {
         Date dateObject = new Date (dateInMilli);
+        Log.e(LOG_TAG, "date in milli: " + dateInMilli);
         Log.e(LOG_TAG, "dateobject: " + dateObject);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
         return dateFormat.format(dateObject);
@@ -560,6 +648,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Finds dates and creates an array of possible departure dates (outbound&inbound) in milliseconds
      */
+    //todo: change in report -- now max is max in trip
     private void getReturnDates(long min, long max, int dayWeek, int dayWanted, int daysIn){
         //need to delete the string otherwise it would add to it after going back from results in the app
         depDates="";
@@ -573,18 +662,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             difference=0;
         }
 
+        //todo: fix before report -- if days in destination are e.g. 30, it shows return date before departure
         long newDate = min + difference; //first day of possible departure
         Log.e(LOG_TAG, "dayweek " + dayWeek);
         Log.e(LOG_TAG, "dayWantd " + dayWanted);
         Log.e(LOG_TAG, "daysIn int " + daysIn);
         Log.e(LOG_TAG, "min " + min);
         Log.e(LOG_TAG, "max " + max);
+        Log.e(LOG_TAG, "max for departure " + (max - (daysIn*86400)));
         Log.e(LOG_TAG, "difference " + difference);
         Log.e(LOG_TAG, "newDate, first one " + newDate);
-        while (newDate<max){
+        //max is not actual maximum for departure but for the return.
+        //(max - (daysIn*86400000L)) is last departure date possible -- not actual last one but potential
+        while (newDate <= (max - (daysIn*86400000L))){
+            Log.e(LOG_TAG, "max - daysIn: " + (max - (daysIn*86400)));
             String stringDateO = makeDateString(newDate);
             Log.e(LOG_TAG, "first date" + stringDateO);
-            String stringDateI = makeDateString(newDate+(daysIn*86400000)); //outgoing plus days * milli
+            long newReturn = (daysIn*86400000L) + newDate;
+            String stringDateI = makeDateString(newReturn); //outgoing plus days * milli
             Log.e(LOG_TAG, "first return date" + stringDateI);
             depDates += stringDateO + " ";
             retDates += stringDateI + " ";
@@ -607,7 +702,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             difference=0;
         }
         long newDate = min + difference; //first day of possible departure
-        while (newDate<max){
+        while (newDate<(max - (daysIn*86400))){
             String stringDateO = makeDateString(newDate);
             depDates += stringDateO + " ";
             newDate += 7 * 86400000; //new date becomes another day of the week following week

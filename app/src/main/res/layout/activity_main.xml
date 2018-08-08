@@ -37,6 +37,7 @@
             android:layout_height="43dp"
             android:background="@android:color/white"
             android:clickable="true"
+            android:focusable="true"
             android:hint="@string/departure_loc"
             android:imeOptions="actionDone"
             android:inputType="text"
@@ -66,6 +67,7 @@
             android:background="@android:color/white"
             android:textSize="24sp"/>
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -81,7 +83,7 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/departure_min"
+                android:id="@+id/trip_date_min"
                 android:inputType="date"
                 android:hint="@string/dep_date"
                 android:clickable="true"
@@ -95,9 +97,8 @@
                 android:background="@android:color/white"
                 android:textSize="20sp"/>
 
-            <!-- will become days in destination with little info that it's calculated based on dep date -->
             <EditText
-                android:id="@+id/departure_max"
+                android:id="@+id/trip_date_max"
                 android:inputType="date"
                 android:hint="@string/return_date"
                 android:clickable="true"
@@ -212,6 +213,7 @@
             android:id="@+id/filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:focusable="true"
             android:background="@drawable/cirle_button"
             android:layout_marginTop="22dp"
             android:layout_gravity="center_vertical|center_horizontal"
@@ -226,6 +228,7 @@
         android:id="@+id/search_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:focusable="true"
         android:text="@string/search_button"
         android:textSize="34sp"
         android:textColor="@android:color/white"
@@ -242,11 +245,23 @@
         android:background="@color/colorPrimary">
 
         <ImageView
+            android:id="@+id/logo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@mipmap/travel"
             android:scaleType="centerInside"
             android:layout_centerInParent="true"/>
+
+        <TextView
+            android:id="@+id/no_internet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="175dp"
+            android:text="@string/no_internet"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
     </RelativeLayout>
 

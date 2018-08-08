@@ -108,6 +108,7 @@ public final class FlightQueryUtils {
                 jsonResponse = readFromStream(inputStream);
             } else {
                 Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
+                //todo: set emptytextview to problem with the results
             }
         } catch (IOException e) {
             Log.e(LOG_TAG, "Problem retrieving the flight JSON results.", e);

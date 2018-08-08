@@ -8,7 +8,7 @@
     <string name="return_date">To</string>
     <string name="direct_only">Direct only</string>
     <string name="no_trips">No trips found!</string>
-    <string name="no_internet">No internet connection!</string>
+    <string name="no_internet">No Internet connection, please try later.</string>
     <string name="trip_search_results">Search results</string>
 
     <string name="trip_availability">Trip availability:</string>

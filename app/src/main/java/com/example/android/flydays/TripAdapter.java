@@ -121,7 +121,6 @@ public class TripAdapter extends ArrayAdapter<Trip> {
 
                 //there must be *1000L as the time is in seconds and java works with milliseconds
                 //using - 3600000 as equivalent to 1 hour difference between our time and CZ?
-                //todo: check the times, now it shows hour less
                 Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
                 Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
 
