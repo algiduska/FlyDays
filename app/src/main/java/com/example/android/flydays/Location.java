@@ -2,16 +2,21 @@ package com.example.android.flydays;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Location implements Serializable{
 
     private ArrayList<String> locsList;
     private Map locsMap;
+    private HashMap airoportMap;
 
-    public Location(ArrayList<String> locsList, Map locsMap){
+    //todo: edit in report -- added airportMap to Location object to find airport name based on code (for summary dialog) - could be done by locs map but there the order is other way around
+
+    public Location(ArrayList<String> locsList, Map locsMap, HashMap airportMap){
         this.locsList=locsList;
         this.locsMap=locsMap;
+        this.airoportMap=airportMap;
     }
 
     public Map getLocsMap() {
@@ -20,6 +25,10 @@ public class Location implements Serializable{
 
     public ArrayList<String> getLocsList() {
         return locsList;
+    }
+
+    public HashMap getAirportMap() {
+        return airoportMap;
     }
 }
 

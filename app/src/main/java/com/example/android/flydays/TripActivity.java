@@ -1,41 +1,49 @@
 package com.example.android.flydays;
 
-import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.Loader;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
-public class TripActivity extends AppCompatActivity implements LoaderCallbacks<List<Trip>> {
+public class TripActivity extends AppCompatActivity implements View.OnClickListener {
 
 //todo: PROBLEM with API calls for 'anywhere' as only the cheapest flights are listed for each destination which means that when I filter them by time there are not many left
-
+//todo: problem with locations in Belgium, all marked as City of London, mistake in kiwi documentation.
     /** base URL for trip data from the Kiwi dataset */
     private static final String FLIGHT_REQUEST_URL =
             "https://api.skypicker.com/flights";
+
+    private static final String AIRLINES_URL =
+            "https://api.skypicker.com/airlines";
+
+    private static final String CITY_IMAGE_URL =
+            "https://api.teleport.org/api/urban_areas/?embed=ua:item/ua:images";
 
     /** Adapter for the list of trips */
     private TripAdapter tAdapter;
@@ -65,6 +73,15 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     private ArrayList<String> depDates = new ArrayList<>();
     private ArrayList<String> retDates = new ArrayList<>();
 
+    private Map<String,String> airlines;
+    private Map<String,String> cityPicURL;
+    private HashMap<String,String> airports;
+    private Bitmap cityPic;
+    private String imageUrl;
+
+    AirlinesCityurlLoader loader;
+
+
     private String outDepMin;
     private String outDepMax;
     private String outArrMin;
@@ -84,8 +101,8 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     private String airToOutC;
     private String airFromRetC;
     private String airToRetC;
-    private String airlineOutC;
-    private String airlineBackC;
+    private String airlineOutN;
+    private String airlineBackN;
     private String durationOut;
     private String durationRet;
     private String depTimeOut;
@@ -97,12 +114,190 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     private String depDateRet;
     private String arrDateRet;
 
-    private Trip currentTrip;
+    private View infoPanel;
 
-    public Trip getCurrentTrip(){
-        return this.currentTrip;
+    private final int AIRLINES_LOADER_ID = 100;
+    private final int CITYURL_LOADER_ID = 200;
+
+
+    //todo: change in report -- the way multiple Loaders are structured
+    // to create multiple loaders: Adil Hussain https://stackoverflow.com/questions/15643907/multiple-loaders-in-same-activity
+    private LoaderCallbacks<List<Trip>> loadTrips = new LoaderCallbacks<List<Trip>>() {
+        /**
+         * Creates the url based on established preferences and uses it for API call to update
+         * the search results
+         */
+        @Override
+        public Loader<List<Trip>> onCreateLoader(int i, Bundle bundle) {
+            Log.e(LOG_TAG, "Loader started");
+
+            Uri baseUri = Uri.parse(FLIGHT_REQUEST_URL);
+            Uri.Builder uriBuilder = baseUri.buildUpon();
+
+            String onewayOnly = oneWay ? "oneway" : "round";
+            String directOrNot = dirOnly ? "1" : "0";
+        /*
+        basic example:
+        https://api.skypicker.com/flights?flyFrom=LON&to=anywhere&dateFrom=13/08/2018&dateTo=13/08/2018&
+        returnFrom=15/08/2018&returnTo=15/08/2018&maxFlyDuration=3&typeFlight=round&directFlights=1&
+        locale=en&partner=picky&price_to=100&limit=30&sort=price&asc=1
+         */
+            uriBuilder.appendQueryParameter("flyFrom", depLoc);
+            uriBuilder.appendQueryParameter("to", holLoc);
+            uriBuilder.appendQueryParameter("dateFrom", depDates.get(trip_loader_id)); //use triploaderID here?
+            uriBuilder.appendQueryParameter("dateTo", depDates.get(trip_loader_id));
+            //can get array out of bounds exception if there is nothing to get from retDates
+            //todo: change in report -- return dates only added to uri if there is return
+            if(!oneWay){
+                uriBuilder.appendQueryParameter("returnFrom", retDates.get(trip_loader_id));
+                uriBuilder.appendQueryParameter("returnTo",retDates.get(trip_loader_id));
+            }
+            uriBuilder.appendQueryParameter("typeFlight", onewayOnly);
+            uriBuilder.appendQueryParameter("directFlights", directOrNot);
+            uriBuilder.appendQueryParameter("locale", langLoc);
+            uriBuilder.appendQueryParameter("dtimefrom", outDepMin);
+            uriBuilder.appendQueryParameter("dtimeto", outDepMax);
+            uriBuilder.appendQueryParameter("atimefrom",outArrMin);
+            uriBuilder.appendQueryParameter("atimeto", outArrMax);
+            uriBuilder.appendQueryParameter("returndtimefrom", retDepMin);
+            uriBuilder.appendQueryParameter("returndtimeto", retDepMax);
+            uriBuilder.appendQueryParameter("returnatimefrom",retArrMin);
+            uriBuilder.appendQueryParameter("returnatimeto", retArrMax);
+            uriBuilder.appendQueryParameter("partner", "picky");
+            uriBuilder.appendQueryParameter("curr", "GBP");
+            //uriBuilder.appendQueryParameter("selectedAirlines", "BA,IB,AY");
+            //uriBuilder.appendQueryParameter("selectedAirlinesExclude", "False");
+            uriBuilder.appendQueryParameter("limit", "100");
+            uriBuilder.appendQueryParameter("sort", "price");
+            uriBuilder.appendQueryParameter("asc", "1");
+
+            String finalURI = uriBuilder.toString();
+            Log.e(LOG_TAG, "Final url generated: " + finalURI);
+
+            return new TripLoader(getApplicationContext(), finalURI);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Trip>> loader, List<Trip> trips) {
+            // Hide loading indicator because the data has been loaded
+            View loadingIndicator = findViewById(R.id.loading_spinner);
+            loadingIndicator.setVisibility(View.GONE);
+
+            // Set empty state text to display "No trips found!"
+            // This won't be visible unless the trips list is empty - if response code is not 200 or there are no actual trips found
+            //todo: change in report -- if there are no trips in trips list it shows no trips found
+            mEmptyStateTextView.setText(R.string.no_trips);
+
+            // If there is a valid list of {@link Trip}s, then add them to the adapter's
+            // data set. This will trigger the ListView to update.
+            if (trips != null && !trips.isEmpty()) {
+                //trips added to the adapter and displayed on the screen
+                tAdapter.addAll(trips);
+                // sorting all the results based on price
+                // https://stackoverflow.com/questions/40143232/how-do-i-sort-the-content-of-my-custom-arrayadapter-by-a-variable-of-the-object
+                tAdapter.sort(new Comparator<Trip>() {
+                    public int compare(Trip t1, Trip t2) {
+                        // Need to use Integer at first for primitive type!
+                        return Integer.valueOf(t1.getPrice()).compareTo(t2.getPrice());
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Trip>> loader) {
+            // Loader reset, so we can clear out our existing data.
+            // clearing the adapter after each of loader iterations not to add to previous searches
+            tAdapter.clear();
+        }
+    };
+
+
+    private LoaderCallbacks<Map<String,String>> loadAirlinesOrCityURL = new LoaderCallbacks<Map<String, String>>() {
+        @Override
+        public Loader<Map<String,String>> onCreateLoader(int i, Bundle bundle) {
+            switch (i){
+                case AIRLINES_LOADER_ID:
+                    loader = new AirlinesCityurlLoader(getApplicationContext(), AIRLINES_URL);
+                    break;
+                case CITYURL_LOADER_ID:
+                    loader = new AirlinesCityurlLoader(getApplicationContext(), CITY_IMAGE_URL);
+                    break;
+            }
+            return loader;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Map<String,String>> lLoader, Map<String, String> map) {
+            switch (lLoader.getId()){
+                case AIRLINES_LOADER_ID:
+                    airlines = map;
+                    if (airlines != null) {
+                        //https://developer.android.com/training/data-storage/files#java
+                        try{
+                            File file = File.createTempFile("airlines", null, getApplicationContext().getCacheDir());
+                            FileOutputStream outputStream = openFileOutput("airlines", Context.MODE_PRIVATE);
+                            //wrapping it into object output stream https://mkyong.com/java/how-to-write-an-object-to-file-in-java/
+                            ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+                            oos.writeObject(airlines);
+                            outputStream.close();
+                            oos.close();
+                        }catch (IOException e){
+                            Log.e(LOG_TAG, "problems with a file in cacheDir " + e);
+                        }
+                    }
+                    break;
+                case CITYURL_LOADER_ID:
+                    cityPicURL=map;
+                    if (cityPicURL != null) {
+                        //https://developer.android.com/training/data-storage/files#java
+                        try{
+                            File file = File.createTempFile("cityPicUrl", null, getApplicationContext().getCacheDir());
+                            FileOutputStream outputStream = openFileOutput("cityPicUrl", Context.MODE_PRIVATE);
+                            //wrapping it into object output stream https://mkyong.com/java/how-to-write-an-object-to-file-in-java/
+                            ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+                            oos.writeObject(cityPicURL);
+                            outputStream.close();
+                            oos.close();
+                        }catch (IOException e){
+                            Log.e(LOG_TAG, "problems with a file in cacheDir " + e);
+                        }
+                    }
+                    break;
+            }
+
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Map<String,String>> loader) {    }
+    };
+
+
+
+/*
+    LoaderCallbacks<Bitmap> images = new LoaderCallbacks<Bitmap>() {
+        @Override
+        public Loader<Bitmap> onCreateLoader(int i, Bundle bundle) {
+
+            ImageLoader bitLoader = new ImageLoader(getApplicationContext(),imageUrl);
+            return bitLoader;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Bitmap> loader, Bitmap bitmap) {
+            cityPic = bitmap;
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Bitmap> loader) {        }
+    };
+    */
+
+    //to go back and edit search parameters
+    @Override
+    public void onClick(View view){
+        finish();
     }
-
 
 
     //some methods needed for dialog
@@ -123,94 +318,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
     }
 
 
-        /**
-     * Creates the url based on established preferences and uses it for API call to update
-     * the search results
-     */
-    @Override
-    public Loader<List<Trip>> onCreateLoader(int i, Bundle bundle) {
-        Log.e(LOG_TAG, "Loader started");
-
-        Uri baseUri = Uri.parse(FLIGHT_REQUEST_URL);
-        Uri.Builder uriBuilder = baseUri.buildUpon();
-
-        String onewayOnly = oneWay ? "oneway" : "round";
-        String directOrNot = dirOnly ? "1" : "0";
-        /*
-        basic example:
-        https://api.skypicker.com/flights?flyFrom=LON&to=anywhere&dateFrom=13/08/2018&dateTo=13/08/2018&
-        returnFrom=15/08/2018&returnTo=15/08/2018&maxFlyDuration=3&typeFlight=round&directFlights=1&
-        locale=en&partner=picky&price_to=100&limit=30&sort=price&asc=1
-         */
-
-
-        //todo: if there isn't return it would throw nullpointer exception --> fix
-        uriBuilder.appendQueryParameter("flyFrom", depLoc);
-        uriBuilder.appendQueryParameter("to", holLoc);
-        uriBuilder.appendQueryParameter("dateFrom", depDates.get(trip_loader_id)); //use triploaderID here?
-        uriBuilder.appendQueryParameter("dateTo", depDates.get(trip_loader_id));
-        uriBuilder.appendQueryParameter("returnFrom", retDates.get(trip_loader_id));
-        uriBuilder.appendQueryParameter("returnTo",retDates.get(trip_loader_id));
-        uriBuilder.appendQueryParameter("typeFlight", onewayOnly);
-        uriBuilder.appendQueryParameter("directFlights", directOrNot);
-        uriBuilder.appendQueryParameter("locale", langLoc);
-        uriBuilder.appendQueryParameter("dtimefrom", outDepMin);
-        uriBuilder.appendQueryParameter("dtimeto", outDepMax);
-        uriBuilder.appendQueryParameter("atimefrom",outArrMin);
-        uriBuilder.appendQueryParameter("atimeto", outArrMax);
-        uriBuilder.appendQueryParameter("returndtimefrom", retDepMin);
-        uriBuilder.appendQueryParameter("returndtimeto", retDepMax);
-        uriBuilder.appendQueryParameter("returnatimefrom",retArrMin);
-        uriBuilder.appendQueryParameter("returnatimeto", retArrMax);
-        uriBuilder.appendQueryParameter("partner", "picky");
-        uriBuilder.appendQueryParameter("curr", "GBP");
-        //uriBuilder.appendQueryParameter("selectedAirlines", "BA,IB,AY");
-        //uriBuilder.appendQueryParameter("selectedAirlinesExclude", "False");
-        uriBuilder.appendQueryParameter("limit", "100");
-        uriBuilder.appendQueryParameter("sort", "price");
-        uriBuilder.appendQueryParameter("asc", "1");
-
-        String finalURI = uriBuilder.toString();
-        Log.e(LOG_TAG, "Final url generated: " + finalURI);
-
-        return new TripLoader(this, finalURI);
-        }
-
-    @Override
-    public void onLoadFinished(Loader<List<Trip>> loader, List<Trip> trips) {
-        // Hide loading indicator because the data has been loaded
-        View loadingIndicator = findViewById(R.id.loading_spinner);
-        loadingIndicator.setVisibility(View.GONE);
-
-        // Set empty state text to display "No trips found!"
-        mEmptyStateTextView.setText(R.string.no_trips);
-
-        // If there is a valid list of {@link Trip}s, then add them to the adapter's
-        // data set. This will trigger the ListView to update.
-        if (trips != null && !trips.isEmpty()) {
-            //trips added to the adapter and displayed on the screen
-            tAdapter.addAll(trips);
-            // sorting all the results based on price
-            // https://stackoverflow.com/questions/40143232/how-do-i-sort-the-content-of-my-custom-arrayadapter-by-a-variable-of-the-object
-            tAdapter.sort(new Comparator<Trip>() {
-                public int compare(Trip t1, Trip t2) {
-                    // Need to use Integer at first for primitive type!
-                    return Integer.valueOf(t1.getPrice()).compareTo(t2.getPrice());
-                }
-            });
-
-        }
-    }
-
-
-
-    @Override
-    public void onLoaderReset(Loader<List<Trip>> loader) {
-        // Loader reset, so we can clear out our existing data.
-        // clearing the adapter after each of loader iterations not to add to previous searches
-        tAdapter.clear();
-    }
-
+//**************************************** on create starts ****************************************
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e(LOG_TAG, "onCreate started");
@@ -242,6 +350,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         retDepMin = bundle.getString("rDMin");
         retArrMax = bundle.getString("rAMax");
         retArrMin = bundle.getString("rAMin");
+        airports = (HashMap<String,String>) bundle.getSerializable("map");
 
         //Log.e(LOG_TAG, "testMin from tripactivity (1000): " + testMin);
         //Log.e(LOG_TAG, "testMax from tripactivity (2200): " + testMax);
@@ -270,8 +379,13 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         cityToCity.setText(cToC);
         String dToD = "between " + fromDate + " and " + toDate;
         dateToDate.setText(dToD);
+        //todo: change in report -- on click listener on cityToCity and DateToDate to go back to search params
+        //sets onClickListener on top information panel so when it's clicked it would bring the user back to MainActivity
+        infoPanel = findViewById(R.id.info_panel);
+        infoPanel.setOnClickListener(this);
 
-        //todo: add on click listener on cityToCity and DateToDate to go back to search options and make filter to remember preferences
+
+
 
         Log.e(LOG_TAG, "bundle extras out");
         Log.e(LOG_TAG, "depLoc is " + depLoc);
@@ -290,6 +404,16 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
         mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
         tripListView.setEmptyView(mEmptyStateTextView);
 
+
+        //todo: change in report -- another mechanism to ensure dates are selected
+        //if there are no departure dates (e.g. because range is smaller than trip lenght) it would show "No trips found!"
+        if(depDates.isEmpty()){
+            View loadingIndicator = findViewById(R.id.loading_spinner);
+            loadingIndicator.setVisibility(View.GONE);
+
+            mEmptyStateTextView.setText(R.string.no_trips);
+        }
+
         //************************************* dialog fragment **********************************
 
         tripListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -297,6 +421,13 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // Find the current trip that was clicked on
                 Trip currentTrip = tAdapter.getItem(position);
+                try{
+                    imageUrl = cityPicURL.get(currentTrip.getArrCity());
+                }catch(Exception e){
+                    Log.e(LOG_TAG, "city not found in cityPicURL");
+                }
+
+                //getLoaderManager().initLoader(101, null, images);
 
                 SummaryDialog summary = new SummaryDialog();
 
@@ -308,6 +439,7 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
                 bundle.putString("holc", currentTrip.getArrCity());
                 bundle.putString("country", currentTrip.getArrCountry());
                 bundle.putInt("price", currentTrip.getPrice());
+                bundle.putString("cityurl", imageUrl);
 
                 List<Flight> flights = currentTrip.getFlights();
                 Flight outbound = null;
@@ -317,14 +449,20 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
                 if(flights.size()>=2) {
                     bundle.putBoolean("return", true);
                     outbound = flights.get(0);
-                    bundle.putString("airFO", outbound.getDepAirportCode());
-                    bundle.putString("airTO", outbound.getArrAirportCode());
-                    bundle.putString("airlineO", outbound.getAirlineCode());
+                    bundle.putString("airFO", airports.get(outbound.getDepAirportCode()));
+                    bundle.putString("airTO", airports.get(outbound.getArrAirportCode()));
+                    //in case that search results are clicked before loadAirlinesOrCityURL finishes with airlines map object
+                    try{
+                        bundle.putString("airlineO", airlines.get(outbound.getAirlineCode()));
+                    }catch (Exception e){
+                        Log.e(LOG_TAG, "problem with reading airlines map ", e);
+                        bundle.putString("airlineO", outbound.getAirlineCode());
+                    }
 
                     durationOut = secToDuration(currentTrip.getDepDuration());
                     bundle.putString("durO", durationOut);
-                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
-                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
+                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000L);
+                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000L);
                     depTimeOut = formatTime(outDeparture);
                     arrTimeOut = formatTime(outArrival);
                     depDateOut = formatDate(outDeparture);
@@ -337,14 +475,17 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
                     bundle.putString("dateAO", arrDateOut);
 
                     returnn = flights.get(1);
-                    bundle.putString("airFR", returnn.getDepAirportCode());
-                    bundle.putString("airTR", returnn.getArrAirportCode());
-                    bundle.putString("airlineR", returnn.getAirlineCode());
-
+                    bundle.putString("airFR", airports.get(returnn.getDepAirportCode()));
+                    bundle.putString("airTR", airports.get(returnn.getArrAirportCode()));
+                    try {
+                        bundle.putString("airlineR", airlines.get(returnn.getAirlineCode()));
+                    }catch (Exception e){
+                        bundle.putString("airlineR", returnn.getAirlineCode());
+                    }
                     durationRet = secToDuration(currentTrip.getRetDuration());
                     bundle.putString("durR", durationRet);
-                    Date retDeparture = new Date(returnn.getDepTimeInSeconds()*1000L - 3600000);
-                    Date retArrival = new Date(returnn.getArrTimeInSeconds()*1000L - 3600000);
+                    Date retDeparture = new Date(returnn.getDepTimeInSeconds()*1000L - 3600000L);
+                    Date retArrival = new Date(returnn.getArrTimeInSeconds()*1000L - 3600000L);
                     depTimeRet = formatTime(retDeparture);
                     arrTimeRet = formatTime(retArrival);
                     depDateRet = formatDate(retDeparture);
@@ -362,14 +503,19 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
                 }else if (flights.size()==1) {
                     bundle.putBoolean("return", false);
                     outbound = flights.get(0);
-                    bundle.putString("airFO", outbound.getDepAirportCode());
-                    bundle.putString("airTO", outbound.getArrAirportCode());
-                    bundle.putString("airlineO", outbound.getAirlineCode());
+                    bundle.putString("airFO", airports.get(outbound.getDepAirportCode()));
+                    bundle.putString("airTO", airports.get(outbound.getArrAirportCode()));
+                    try{
+                        bundle.putString("airlineO", airlines.get(outbound.getAirlineCode()));
+                    }catch (Exception e){
+                        Log.e(LOG_TAG, "problem with reading airlines map ", e);
+                        bundle.putString("airlineO", outbound.getAirlineCode());
+                    }
 
                     durationOut = secToDuration(currentTrip.getDepDuration());
                     bundle.putString("durO", durationOut);
-                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000);
-                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000);
+                    Date outDeparture = new Date(outbound.getDepTimeInSeconds()*1000L - 3600000L);
+                    Date outArrival = new Date(outbound.getArrTimeInSeconds()*1000L - 3600000L);
                     depTimeOut = formatTime(outDeparture);
                     arrTimeOut = formatTime(outArrival);
                     depDateOut = formatDate(outDeparture);
@@ -385,18 +531,6 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
                 }else {
                     outbound = null;
                 }
-
-
-                /*
-                // Convert the String URL into a URI object (to pass into the Intent constructor)
-                Uri bookingUri = Uri.parse(currentTrip.getBookingURL());
-
-                // Create a new intent to view the booking URI
-                Intent websiteIntent = new Intent(Intent.ACTION_VIEW, bookingUri);
-
-                // Send the intent to launch a new activity
-                startActivity(websiteIntent);
-                */
             }
         });
 
@@ -423,8 +557,31 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
             // and does that for each date pair --> each having own loader to execute on the background
             for(int x = 0; x < depDates.size(); x++) {
                 trip_loader_id = x;
-                loaderManager.initLoader(trip_loader_id, null, this);
+                loaderManager.initLoader(trip_loader_id, null, loadTrips);
             }
+            try {
+                //https://developer.android.com/training/data-storage/files#java
+                FileInputStream fileIStream = openFileInput("airlines");
+                //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/
+                ObjectInputStream ois = new ObjectInputStream(fileIStream);
+                airlines = (Map<String, String>) ois.readObject();
+                Log.e(LOG_TAG, "file was found for airlines map");
+
+            }catch (Exception e){
+                loaderManager.initLoader(AIRLINES_LOADER_ID,null, loadAirlinesOrCityURL);
+                Log.e(LOG_TAG, "loadAirlinesOrCityURL was triggered for airlines map");
+            }
+            try{
+                FileInputStream fileInStream = openFileInput("cityPicUrl");
+                //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/
+                ObjectInputStream oIs = new ObjectInputStream(fileInStream);
+                cityPicURL = (Map<String, String>) oIs.readObject();
+                Log.e(LOG_TAG, "file was found for citypicurl map");
+            }catch (Exception e){
+                loaderManager.initLoader(CITYURL_LOADER_ID,null, loadAirlinesOrCityURL);
+                Log.e(LOG_TAG, "loadAirlinesOrCityURL was triggered for citypicurl map");
+            }
+
 
         } else {
             // Otherwise, display error
@@ -435,10 +592,6 @@ public class TripActivity extends AppCompatActivity implements LoaderCallbacks<L
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet);
         }
-
-        //TODO: deal with http 400 response code
-
-
     }
 }
 

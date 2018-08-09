@@ -14,11 +14,13 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="150dp">
+                android:layout_height="140dp">
 
                 <ImageView
+                    android:id="@+id/city_pic"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
                     android:background="@color/colorPrimary"/>
 
                 <TextView
@@ -28,9 +30,9 @@
                     android:layout_above="@+id/country"
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
-                    android:textSize="24dp"
-                    android:textStyle="bold"
                     android:textColor="@color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
                     tools:text="Hamburg" />
 
                 <TextView
@@ -38,15 +40,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="8dp"
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
-                    android:layout_marginBottom="8dp"
-                    tools:text="Germany"
+                    android:ellipsize="end"
+                    android:maxLength="15"
                     android:textAllCaps="true"
                     android:textColor="@color/white"
-                    android:maxLength="15"
-                    android:ellipsize="end"
-                    android:textSize="24dp"/>
+                    android:textSize="24sp"
+                    tools:text="Germany" />
 
                 <TextView
                     android:id="@+id/price_total"
@@ -88,7 +90,7 @@
                         android:layout_height="match_parent"
                         android:orientation="vertical"
                         android:layout_centerHorizontal="true"
-                        android:background="@color/black"
+                        android:background="@color/colorPrimary"
                         android:layout_marginTop="16dp"
                         android:layout_marginBottom="16dp"/>
 
@@ -118,8 +120,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textColor="@color/black"
+                            android:textStyle="bold"
                             tools:text="13:05" />
 
                         <TextView
@@ -127,24 +130,13 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textColor="@color/black"
                             tools:text="14/09/2018" />
 
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="0dp"
-                            android:layout_weight="1" />
-
                         <TextView
                             android:id="@+id/from_city"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="end"
-                            android:layout_marginRight="16dp"
-                            android:textSize="20sp"
-                            android:maxLength="10"
-                            android:textColor="@color/black"
+                            style="@style/cityInSummary"
                             tools:text="London" />
 
                     </LinearLayout>
@@ -153,8 +145,9 @@
                         android:id="@+id/from_airport"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        tools:text="London Stansted"
-                        android:textStyle="italic"/>
+                        android:textStyle="italic"
+                        tools:layout_marginRight="16dp"
+                        tools:text="London Stansted" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -213,14 +206,14 @@
                             android:layout_marginRight="16dp"
                             android:layout_alignParentRight="true"
                             android:layout_alignParentBottom="true"
-                            android:background="@color/colorAccent"/>
+                            android:scaleType="fitCenter"/>
 
                     </RelativeLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="7dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -228,7 +221,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textStyle="italic"
-                            tools:text="Hamburg Airport"/>
+                            tools:layout_marginRight="16dp"
+                            tools:text="Hamburg Airport" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -240,7 +234,8 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
-                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textSize="18sp"
                                 android:textColor="@color/black"
                                 tools:text="14:20" />
 
@@ -249,23 +244,15 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
-                                android:textSize="20sp"
+                                android:textSize="18sp"
                                 android:textColor="@color/black"
                                 tools:text="14/09/2018" />
 
-                            <View
-                                android:layout_width="0dp"
-                                android:layout_height="0dp"
-                                android:layout_weight="1" />
+
 
                             <TextView
                                 android:id="@+id/to_city"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="end"
-                                android:layout_marginRight="16dp"
-                                android:textColor="@color/black"
-                                android:textSize="20sp"
+                                style="@style/cityInSummary"
                                 tools:text="Hamburg" />
 
                         </LinearLayout>
@@ -309,7 +296,7 @@
                         android:layout_height="match_parent"
                         android:orientation="vertical"
                         android:layout_centerHorizontal="true"
-                        android:background="@color/black"
+                        android:background="@color/colorPrimary"
                         android:layout_marginTop="16dp"
                         android:layout_marginBottom="16dp"/>
 
@@ -339,8 +326,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textColor="@color/black"
+                            android:textStyle="bold"
                             tools:text="13:05" />
 
                         <TextView
@@ -348,23 +336,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginRight="12dp"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textColor="@color/black"
                             tools:text="14/09/2018" />
 
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="0dp"
-                            android:layout_weight="1" />
 
                         <TextView
                             android:id="@+id/from_city2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="end"
-                            android:layout_marginRight="16dp"
-                            android:textSize="20sp"
-                            android:textColor="@color/black"
+                            style="@style/cityInSummary"
                             tools:text="London" />
 
                     </LinearLayout>
@@ -373,8 +352,9 @@
                         android:id="@+id/from_airport2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        tools:text="London Stansted"
-                        android:textStyle="italic"/>
+                        android:textStyle="italic"
+                        tools:layout_marginRight="16dp"
+                        tools:text="London Stansted" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -433,14 +413,14 @@
                             android:layout_marginRight="16dp"
                             android:layout_alignParentRight="true"
                             android:layout_alignParentBottom="true"
-                            android:background="@color/colorAccent"/>
+                            android:scaleType="fitCenter"/>
 
                     </RelativeLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="7dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -448,7 +428,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textStyle="italic"
-                            tools:text="Hamburg Airport"/>
+                            tools:layout_marginRight="16dp"
+                            tools:text="Hamburg Airport" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -460,8 +441,9 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
-                                android:textSize="20sp"
+                                android:textSize="18sp"
                                 android:textColor="@color/black"
+                                android:textStyle="bold"
                                 tools:text="14:20" />
 
                             <TextView
@@ -469,23 +451,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginRight="12dp"
-                                android:textSize="20sp"
+                                android:textSize="18sp"
                                 android:textColor="@color/black"
                                 tools:text="14/09/2018" />
 
-                            <View
-                                android:layout_width="0dp"
-                                android:layout_height="0dp"
-                                android:layout_weight="1" />
 
                             <TextView
                                 android:id="@+id/to_city2"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="end"
-                                android:layout_marginRight="16dp"
-                                android:textSize="20sp"
-                                android:textColor="@color/black"
+                                style="@style/cityInSummary"
                                 tools:text="Hamburg" />
 
                         </LinearLayout>

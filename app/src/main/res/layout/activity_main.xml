@@ -5,252 +5,258 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-<RelativeLayout
-    android:id="@+id/main_view"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
-    android:focusableInTouchMode="true">
-
-
-    <!-- The primary full-screen view. -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginLeft="24dp"
-        android:layout_marginRight="24dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="2dp"
-            android:paddingLeft="5dp"
-            android:text="@string/from"
-            />
-
-        <AutoCompleteTextView
-            android:id="@+id/location_from"
+        <RelativeLayout
+            android:id="@+id/main_view"
             android:layout_width="match_parent"
-            android:layout_height="43dp"
-            android:background="@android:color/white"
-            android:clickable="true"
-            android:focusable="true"
-            android:hint="@string/departure_loc"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:nextFocusForward="@+id/location_to"
-            android:padding="5dp"
-            android:textSize="24sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="2dp"
-            android:paddingLeft="5dp"
-            android:text="@string/to"
-            />
-
-        <!-- actionDone ime options to close keyboard after enter is pressed - https://stackoverflow.com/questions/23251605/hidding-keyboard-after-enter-key-is-pressed -->
-        <AutoCompleteTextView
-            android:id="@+id/location_to"
-            android:inputType="text"
-            android:hint="@string/holiday_loc"
-            android:layout_width="match_parent"
-            android:layout_height="43dp"
-            android:padding="5dp"
-            android:imeOptions="actionDone"
-            android:clickable="true"
-            android:background="@android:color/white"
-            android:textSize="24sp"/>
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimary"
+            android:focusableInTouchMode="true">
 
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="2dp"
-            android:text="@string/trip_availability"
-            android:paddingLeft="5dp"
-            />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/trip_date_min"
-                android:inputType="date"
-                android:hint="@string/dep_date"
-                android:clickable="true"
-                android:focusableInTouchMode="true"
-                android:focusable="false"
-                android:layout_width="0dp"
-                android:layout_height="43dp"
-                android:layout_weight="1"
-                android:layout_marginRight="24dp"
-                android:padding="5dp"
-                android:background="@android:color/white"
-                android:textSize="20sp"/>
-
-            <EditText
-                android:id="@+id/trip_date_max"
-                android:inputType="date"
-                android:hint="@string/return_date"
-                android:clickable="true"
-                android:focusable="false"
-                android:layout_width="0dp"
-                android:layout_height="43dp"
-                android:layout_weight="1"
-                android:padding="5dp"
+            <!-- The primary full-screen view. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="24dp"
-                android:background="@android:color/white"
-                android:textSize="20sp"/>
-        </LinearLayout>
-
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="2dp"
-            android:text="@string/dep_day"
-            android:paddingLeft="5dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:text="@string/mon"
-                android:id="@+id/btn0"
-                android:layout_gravity="center_vertical"
-                style="@style/MyButtonStyleSmall"/>
-
-            <Button
-                android:id="@+id/btn1"
-                style="@style/MyButtonStyleSmall"
-                android:layout_gravity="center_vertical"
-                android:text="@string/tue" />
-
-            <Button
-                android:text="@string/wed"
-                android:id="@+id/btn2"
-                android:layout_gravity="center_vertical"
-                style="@style/MyButtonStyleSmall"/>
-
-            <Button
-                android:text="@string/thu"
-                android:id="@+id/btn3"
-                android:layout_gravity="center_vertical"
-                style="@style/MyButtonStyleSmall"/>
-
-            <Button
-                android:text="@string/fri"
-                android:id="@+id/btn4"
-                android:layout_gravity="center_vertical"
-                style="@style/MyButtonStyleSmall"/>
-
-            <Button
-                android:text="@string/sat"
-                android:id="@+id/btn5"
-                android:layout_gravity="center_vertical"
-                style="@style/MyButtonStyleSmall"/>
-
-            <Button
-                android:id="@+id/btn6"
-                style="@style/MyButtonStyleSmall"
-                android:layout_gravity="center_vertical"
-                android:text="@string/sun" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="2dp"
-            android:paddingLeft="5dp"
-            android:text="@string/days_in" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/days_in"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="43dp"
                 android:layout_marginRight="24dp"
-                android:hint="@string/d_in_hint"
-                android:inputType="number"
-                android:padding="5dp"
-                android:clickable="true"
-                android:imeOptions="actionDone"
-                android:background="@android:color/white"
-                android:textSize="20sp" />
+                android:orientation="vertical">
 
-            <CheckBox
-                android:id="@+id/one_way"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="43dp"
-                android:layout_marginLeft="24dp"
-                android:text="@string/one_way"
-                android:textSize="20sp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingLeft="5dp"
+                    android:text="@string/from" />
 
-        </LinearLayout>
+                <AutoCompleteTextView
+                    android:id="@+id/location_from"
+                    android:layout_width="match_parent"
+                    android:layout_height="43dp"
+                    android:background="@android:color/white"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:hint="@string/departure_loc"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:nextFocusForward="@+id/location_to"
+                    android:padding="5dp"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingLeft="5dp"
+                    android:text="@string/to" />
+
+                <!-- actionDone ime options to close keyboard after enter is pressed - https://stackoverflow.com/questions/23251605/hidding-keyboard-after-enter-key-is-pressed -->
+                <AutoCompleteTextView
+                    android:id="@+id/location_to"
+                    android:layout_width="match_parent"
+                    android:layout_height="43dp"
+                    android:background="@android:color/white"
+                    android:clickable="true"
+                    android:hint="@string/holiday_loc"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:padding="5dp"
+                    android:textSize="24sp" />
 
 
-        <ImageView
-            android:id="@+id/filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:background="@drawable/cirle_button"
-            android:layout_marginTop="22dp"
-            android:layout_gravity="center_vertical|center_horizontal"
-            android:src="@drawable/ic_filter_list_black_24dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingLeft="5dp"
+                    android:text="@string/trip_availability" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/trip_date_min"
+                        android:layout_width="0dp"
+                        android:layout_height="43dp"
+                        android:layout_marginRight="24dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/white"
+                        android:clickable="true"
+                        android:focusable="false"
+                        android:focusableInTouchMode="true"
+                        android:hint="@string/dep_date"
+                        android:inputType="date"
+                        android:padding="5dp"
+                        android:textSize="20sp" />
+
+                    <EditText
+                        android:id="@+id/trip_date_max"
+                        android:layout_width="0dp"
+                        android:layout_height="43dp"
+                        android:layout_marginLeft="24dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/white"
+                        android:clickable="true"
+                        android:focusable="false"
+                        android:hint="@string/return_date"
+                        android:inputType="date"
+                        android:padding="5dp"
+                        android:textSize="20sp" />
+                </LinearLayout>
 
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingLeft="5dp"
+                    android:text="@string/dep_day" />
 
-    </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn0"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/mon" />
+
+                    <Button
+                        android:id="@+id/btn1"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/tue" />
+
+                    <Button
+                        android:id="@+id/btn2"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/wed" />
+
+                    <Button
+                        android:id="@+id/btn3"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/thu" />
+
+                    <Button
+                        android:id="@+id/btn4"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/fri" />
+
+                    <Button
+                        android:id="@+id/btn5"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/sat" />
+
+                    <Button
+                        android:id="@+id/btn6"
+                        style="@style/MyButtonStyleSmall"
+                        android:layout_gravity="center_vertical"
+                        android:text="@string/sun" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginTop="20dp"
+                    android:paddingLeft="5dp"
+                    android:text="@string/days_in" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/days_in"
+                        android:layout_width="0dp"
+                        android:layout_height="43dp"
+                        android:layout_marginRight="24dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/white"
+                        android:clickable="true"
+                        android:hint="@string/d_in_hint"
+                        android:imeOptions="actionDone"
+                        android:inputType="number"
+                        android:padding="5dp"
+                        android:textSize="20sp" />
+
+                    <CheckBox
+                        android:id="@+id/one_way"
+                        android:layout_width="0dp"
+                        android:layout_height="43dp"
+                        android:layout_marginLeft="24dp"
+                        android:layout_weight="1"
+                        android:text="@string/one_way"
+                        android:textSize="20sp" />
+
+                </LinearLayout>
 
 
-    <Button
-        android:id="@+id/search_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:text="@string/search_button"
-        android:textSize="34sp"
-        android:textColor="@android:color/white"
-        android:background="@color/colorAccent"
-        android:layout_alignParentBottom="true" />
+                <ImageView
+                    android:id="@+id/filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|center_horizontal"
+                    android:layout_marginBottom="60dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/cirle_button"
+                    android:focusable="true"
+                    android:src="@drawable/ic_filter_list_black_24dp" />
 
 
-</RelativeLayout>
+            </LinearLayout>
+
+
+            <Button
+                android:id="@+id/search_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
+                android:background="@color/colorAccent"
+                android:focusable="true"
+                android:text="@string/search_button"
+                android:textColor="@android:color/white"
+                android:textSize="34sp" />
+
+
+        </RelativeLayout>
+    </ScrollView>
 
     <RelativeLayout
         android:id="@+id/activity_start"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:background="@color/colorPrimary">
 
         <ImageView
             android:id="@+id/logo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@mipmap/travel"
+            android:layout_centerInParent="true"
             android:scaleType="centerInside"
-            android:layout_centerInParent="true"/>
+            android:src="@mipmap/travel" />
 
         <TextView
             android:id="@+id/no_internet"
@@ -259,9 +265,9 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="175dp"
-            android:text="@string/no_internet"
             android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            tools:text="@string/no_internet" />
 
     </RelativeLayout>
 

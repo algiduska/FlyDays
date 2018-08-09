@@ -2,25 +2,133 @@ package com.example.android.flydays;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.LoaderManager;
+//import android.support.v4.app.LoaderManager;
+import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.Loader;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.text.Layout;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.app.AlertDialog;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class SummaryDialog extends AppCompatDialogFragment {
 
     private static final String LOG_TAG = SummaryDialog.class.getName();
+    Context context;
+
+    private String airlineO;
+    private String airlineR;
+    private TextView airlineV;
+    private TextView airline2V;
+    private ImageView pic;
+    private ImageView airlineLogo;
+    private ImageView airlineLogo2;
+
+    private String imageCityUrl;
+    private String airlineOutUrl;
+    private String airlineRetUrl;
+
+    ImageLoader bitLoader;
+
+
+    private final int CITY_LOADER_ID = 101;
+    private final int LOGO_OUT_LOADER_ID = 102;
+    private final int LOGO_RET_LOADER_ID = 103;
+
+
+    //loaderCallbacks -- for some reason they need to be in support library, there is no other way
+    // to get android.app.LoaderManager (which is also deprecated for the support library)
+    /**
+     * LoaderCallbacks to get images. Loader is initialised on LoaderManager where Loader ID has specific meaning.
+     * Based on this meaning different views will be updated.
+     */
+    android.support.v4.app.LoaderManager.LoaderCallbacks<Bitmap> images = new android.support.v4.app.LoaderManager.LoaderCallbacks<Bitmap>() {
+        @Override
+        public android.support.v4.content.Loader<Bitmap> onCreateLoader(int i, Bundle bundle) {
+
+            switch (i){
+                case CITY_LOADER_ID:
+                    bitLoader = new ImageLoader(context,imageCityUrl);
+                    break;
+                case LOGO_OUT_LOADER_ID:
+                    bitLoader = new ImageLoader(context,airlineOutUrl);
+                    break;
+                case LOGO_RET_LOADER_ID:
+                    bitLoader = new ImageLoader(context,airlineRetUrl);
+                    break;
+            }
+
+            return bitLoader;
+        }
+
+        @Override
+        public void onLoadFinished(android.support.v4.content.Loader<Bitmap> loader, Bitmap bitmap) {
+            switch(loader.getId()){
+                case CITY_LOADER_ID:
+                    pic.setImageBitmap(bitmap);
+                    break;
+                case LOGO_OUT_LOADER_ID:
+                    airlineLogo.setImageBitmap(bitmap);
+                    break;
+                case LOGO_RET_LOADER_ID:
+                    airlineLogo2.setImageBitmap(bitmap);
+                    break;
+            }
+
+        }
+
+        @Override
+        public void onLoaderReset(android.support.v4.content.Loader<Bitmap> loader) {        }
+    };
+
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        //todo: receive the bundle data
+        context = getContext();
+
         //how to do in a fragment: Sam - https://stackoverflow.com/questions/15459209/passing-argument-to-dialogfragment
         Bundle bundle = getArguments();
 
@@ -32,10 +140,11 @@ public class SummaryDialog extends AppCompatDialogFragment {
         String holCity = bundle.getString("holc");
         String country = bundle.getString("country");
         int price = bundle.getInt("price");
+        imageCityUrl = bundle.getString("cityurl");
 
         String airFromOut = bundle.getString("airFO");
         String airToOut = bundle.getString("airTO");
-        String airlineO = bundle.getString("airlineO");
+        airlineO = bundle.getString("airlineO");
         String durO = bundle.getString("durO");
         String timeDepOut = bundle.getString("timeDO");
         String timeArrOut = bundle.getString("timeAO");
@@ -44,7 +153,7 @@ public class SummaryDialog extends AppCompatDialogFragment {
 
         String airFromRet= "";
         String airToRet = "";
-        String airlineR = "";
+        airlineR = "";
         String durR = "";
         String timeDepRet ="";
         String timeArrRet= "";
@@ -52,6 +161,12 @@ public class SummaryDialog extends AppCompatDialogFragment {
         String dateArrRet ="";
 
         boolean returnn= bundle.getBoolean("return");
+
+        //imageCityUrl = "https://d13k13wj6adfdf.cloudfront.net/urban_areas/amsterdam_web-1cd4b2bf75.jpg";
+
+        android.support.v4.app.LoaderManager loaderManager = getLoaderManager();
+        loaderManager.initLoader(CITY_LOADER_ID, null, images);
+        loaderManager.initLoader(LOGO_OUT_LOADER_ID, null, images);
 
         if (returnn){
             airFromRet = bundle.getString("airFR");
@@ -62,6 +177,8 @@ public class SummaryDialog extends AppCompatDialogFragment {
             timeArrRet = bundle.getString("timeAR");
             dateDepRet = bundle.getString("dateDR");
             dateArrRet = bundle.getString("dateAR");
+
+            loaderManager.initLoader(LOGO_RET_LOADER_ID, null, images);
         }
 
 
@@ -72,8 +189,6 @@ public class SummaryDialog extends AppCompatDialogFragment {
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         View view = inflater.inflate(R.layout.summary_dialog, null);
-
-
 
 
         TextView desCityV = view.findViewById(R.id.city);
@@ -100,7 +215,7 @@ public class SummaryDialog extends AppCompatDialogFragment {
 
         TextView durV = view.findViewById(R.id.duration);
         durV.setText(durO);
-        TextView airlineV = view.findViewById(R.id.airline);
+        airlineV = view.findViewById(R.id.airline);
         airlineV.setText(airlineO);
 
         TextView toCityV = view.findViewById(R.id.to_city);
@@ -128,7 +243,7 @@ public class SummaryDialog extends AppCompatDialogFragment {
 
             TextView dur2V = view.findViewById(R.id.duration2);
             dur2V.setText(durR);
-            TextView airline2V = view.findViewById(R.id.airline2);
+            airline2V = view.findViewById(R.id.airline2);
             airline2V.setText(airlineR);
 
             TextView toCity2V = view.findViewById(R.id.to_city2);
@@ -138,6 +253,17 @@ public class SummaryDialog extends AppCompatDialogFragment {
         }else{
             returnFlightV.setVisibility(View.GONE);
         }
+
+        pic = view.findViewById(R.id.city_pic);
+        airlineLogo = view.findViewById(R.id.airline_logo);
+        airlineLogo2 = view.findViewById(R.id.airline_logo2);
+
+        /*try {
+            pic.setImageBitmap(cityPic);
+            Log.e(LOG_TAG, "cityPic bitmap was set");
+        }catch (Exception e){
+            Log.e(LOG_TAG, "Exception in reading cityPic bitmap", e);
+        }*/
 
         builder.setView(view)
                 // Add action buttons

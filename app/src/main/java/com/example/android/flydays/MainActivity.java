@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.graphics.Color;
+import android.media.Image;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -44,16 +45,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 //todo: create a custom adapter to sort locations better?
-//todo: toast if no departure day is selected or others missing?
-    //https://stackoverflow.com/questions/11574752/autocompletetextview-doesnt-suggest-what-i-want
 
 //to clear cache - Tools -> AVD Manager -> wipe data
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderCallbacks<Location>, FilterDialogListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+        LoaderCallbacks<Location>, FilterDialogListener{
 
     AutoCompleteTextView locFromView;
     AutoCompleteTextView locToView;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button searchButton;
     ImageView filter;
     View introView;
-    View noInternet;
+    TextView noInternet;
     RelativeLayout myPage;
 
     String langLocale;
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayAdapter<String> adapterTo;
     private ArrayList<String> locsList;
     private Map <String, String> locsMap;
+    private HashMap <String, String> airportMap;
 
     //week buttons
     private Button[] btn = new Button[7];
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         //todo: change in report -- now if there is no internet it would say it
         // set visibility to GONE if there is no internet (unless there is cached data)
-        noInternet = findViewById(R.id.no_internet);
+        noInternet = (TextView) findViewById(R.id.no_internet);
         noInternet.setVisibility(View.GONE);
         context = getApplicationContext();
 
@@ -282,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             locsMap = location.getLocsMap();
             locsList = location.getLocsList();
             Collections.sort(locsList);
+            airportMap = location.getAirportMap();
             adapterFrom.addAll(locsList);
             adapterTo.addAll(locsList);
             adapterTo.add("anywhere");
@@ -322,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 loaderManager.initLoader(LOCATION_LOADER_ID, null, this);
             } else {
                 //if no connection make it visible on the main page
+                noInternet.setText(R.string.no_internet);
                 noInternet.setVisibility(View.VISIBLE);
             }
         }
@@ -454,6 +458,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bundle.putString("rDMax", retDepMax);
                 bundle.putString("rAMin", retArrMin);
                 bundle.putString("rAMax", retArrMax);
+
+                //airportMap was changed to HashMap type as it automatically implements serialisable
+                bundle.putSerializable("map", airportMap);
 
 
                 //Add the bundle to the intent
@@ -730,6 +737,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         uriBuilder.appendQueryParameter("type", "dump");
         uriBuilder.appendQueryParameter("locale", Locale.getDefault().toString()); //it's en_US format
         uriBuilder.appendQueryParameter("location_types", "airport");
+        //todo: edit in report -- justify why 10,000 airport locations
         uriBuilder.appendQueryParameter("limit", "10000");
         uriBuilder.appendQueryParameter("sort", "name");
         uriBuilder.appendQueryParameter("active_only", "true");
@@ -744,7 +752,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onLoadFinished(Loader<Location> lLoader, Location locationStrings) {
 
-        introView.setVisibility(View.GONE);
+        noInternet.setText(R.string.smth_wrong);
 
         // Clear the adapter of previous earthquake data
         adapterFrom.clear();
@@ -753,9 +761,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo: what if the call doesn't work and throw null pointer exception?
         // if locationsStrings is not null do this?
         if (locationStrings != null) {
+            introView.setVisibility(View.GONE);
             locsList = locationStrings.getLocsList();
             locsMap = locationStrings.getLocsMap();
             Log.e(LOG_TAG, "Locs map" + locsMap);
+            airportMap = locationStrings.getAirportMap();
 
             //https://developer.android.com/training/data-storage/files#java
             try{

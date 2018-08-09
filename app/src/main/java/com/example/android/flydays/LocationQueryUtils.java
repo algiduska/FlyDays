@@ -161,6 +161,7 @@ public final class LocationQueryUtils {
         //List<Location> locations = new ArrayList<>();
         ArrayList<String> locsAvailable = new ArrayList<>();;
         Map <String, String> locsMap = new HashMap();
+        HashMap <String, String> airportsMap = new HashMap();
         Location locs = null;
 
         //List<String> locsList = new ArrayList<String>();
@@ -189,17 +190,16 @@ public final class LocationQueryUtils {
                 String countryN = country.getString("name");
 
 
-                //locations.add(location);
-
-
+                //add to locsMap for translation from name to code
+                //map object doesn't hold duplicates of keys
                 locsMap.put(airportN, airportC);
                 locsMap.put(cityN, cityC);
                 locsMap.put(countryN, countryC);
 
+                //add to airportsMap for translations of airport names based on code.
+                airportsMap.put(airportC, airportN);
 
-                //map object
-                // distinct list --> set https://stackoverflow.com/questions/13429119/get-unique-values-from-arraylist-in-java
-                // making my own list
+                //adding to the array list avoiding duplications
                 if(!locsAvailable.contains(airportN))
                     locsAvailable.add(airportN);
                 if(!locsAvailable.contains(cityN))
@@ -210,9 +210,8 @@ public final class LocationQueryUtils {
             locsMap.put("anywhere", "anywhere");
             //locsAvailable.add("anywhere");
 
-            locs = new Location(locsAvailable,locsMap);
-            //Log.e(LOG_TAG, "locsAvailable array: " + locsAvailable);
-            //Log.e(LOG_TAG, "locsMap: " + locsMap);
+            locs = new Location(locsAvailable,locsMap,airportsMap);
+
 
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
