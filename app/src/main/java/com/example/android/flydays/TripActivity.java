@@ -183,10 +183,6 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
             View loadingIndicator = findViewById(R.id.loading_spinner);
             loadingIndicator.setVisibility(View.GONE);
 
-            // Set empty state text to display "No trips found!"
-            // This won't be visible unless the trips list is empty - if response code is not 200 or there are no actual trips found
-            //todo: change in report -- if there are no trips in trips list it shows no trips found
-            mEmptyStateTextView.setText(R.string.no_trips);
 
             // If there is a valid list of {@link Trip}s, then add them to the adapter's
             // data set. This will trigger the ListView to update.
@@ -201,6 +197,11 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
                         return Integer.valueOf(t1.getPrice()).compareTo(t2.getPrice());
                     }
                 });
+            }else{
+                // Set empty state text to display "No trips found!"
+                // This won't be visible unless the trips list is empty - if response code is not 200 or there are no actual trips found
+                //todo: change in report -- if there are no trips in trips list it shows no trips found
+                mEmptyStateTextView.setText(R.string.no_trips);
             }
         }
 
@@ -451,6 +452,7 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
                     outbound = flights.get(0);
                     bundle.putString("airFO", airports.get(outbound.getDepAirportCode()));
                     bundle.putString("airTO", airports.get(outbound.getArrAirportCode()));
+                    bundle.putString("airlineCodeO", outbound.getAirlineCode());
                     //in case that search results are clicked before loadAirlinesOrCityURL finishes with airlines map object
                     try{
                         bundle.putString("airlineO", airlines.get(outbound.getAirlineCode()));
@@ -477,6 +479,7 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
                     returnn = flights.get(1);
                     bundle.putString("airFR", airports.get(returnn.getDepAirportCode()));
                     bundle.putString("airTR", airports.get(returnn.getArrAirportCode()));
+                    bundle.putString("airlineCodeR", returnn.getAirlineCode());
                     try {
                         bundle.putString("airlineR", airlines.get(returnn.getAirlineCode()));
                     }catch (Exception e){
@@ -505,6 +508,7 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
                     outbound = flights.get(0);
                     bundle.putString("airFO", airports.get(outbound.getDepAirportCode()));
                     bundle.putString("airTO", airports.get(outbound.getArrAirportCode()));
+                    bundle.putString("airlineCodeO", outbound.getAirlineCode());
                     try{
                         bundle.putString("airlineO", airlines.get(outbound.getAirlineCode()));
                     }catch (Exception e){
@@ -559,18 +563,22 @@ public class TripActivity extends AppCompatActivity implements View.OnClickListe
                 trip_loader_id = x;
                 loaderManager.initLoader(trip_loader_id, null, loadTrips);
             }
+
+            // initialises loader for airlines names
             try {
                 //https://developer.android.com/training/data-storage/files#java
                 FileInputStream fileIStream = openFileInput("airlines");
                 //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/
                 ObjectInputStream ois = new ObjectInputStream(fileIStream);
                 airlines = (Map<String, String>) ois.readObject();
-                Log.e(LOG_TAG, "file was found for airlines map");
+                Log.e(LOG_TAG, "file was found for airlines map" + airlines);
 
             }catch (Exception e){
                 loaderManager.initLoader(AIRLINES_LOADER_ID,null, loadAirlinesOrCityURL);
                 Log.e(LOG_TAG, "loadAirlinesOrCityURL was triggered for airlines map");
             }
+
+            // initialises loader for city picture URLs
             try{
                 FileInputStream fileInStream = openFileInput("cityPicUrl");
                 //https://mkyong.com/java/how-to-read-an-object-from-file-in-java/

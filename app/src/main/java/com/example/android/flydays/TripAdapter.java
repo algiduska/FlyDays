@@ -1,15 +1,24 @@
 package com.example.android.flydays;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.text.Layout;
 import android.text.format.DateUtils;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -22,12 +31,21 @@ import java.util.Locale;
 
 
 public class TripAdapter extends ArrayAdapter<Trip> {
+    Context context;
+    String airUrlO;
+    String airUrlR;
+    ImageView outLogoView;
+    ImageView retLogoView;
+    int position;
+    private static final String LOG_TAG = TripAdapter.class.getName();
+
 
     public TripAdapter(Context context, List<Trip> trips) {
+        // loader manager must also be passed from TRipActivity as it can't be initialised in here: https://stackoverflow.com/questions/42324323/call-loadermanager-from-class-which-is-not-activity
         super(context, 0, trips);
+        this.context = context;
     }
 
-    private static final String LOG_TAG = TripAdapter.class.getName();
 
 
     //for format representation: https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
@@ -58,11 +76,13 @@ public class TripAdapter extends ArrayAdapter<Trip> {
 
 
         public View getView(int position, View convertView, ViewGroup parent){
+            this.position = position;
             View listItemView = convertView;
             if (listItemView==null){
                 listItemView = LayoutInflater.from(getContext()).inflate(
                         R.layout.trip_list_item, parent,false);
             }
+
 
             Trip currentTrip = getItem(position);
 
@@ -108,10 +128,23 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 outbound = null;
             }
 
-            if(outbound != null) {
-                TextView outLogoView = (TextView) listItemView.findViewById(R.id.out_airline);
 
-                outLogoView.setText(String.valueOf(outbound.getAirlineCode()));
+
+
+            if(outbound != null) {
+                outLogoView = (ImageView) listItemView.findViewById(R.id.out_airline);
+                String aircodeO = String.valueOf(outbound.getAirlineCode());
+                airUrlO = "https://images.kiwi.com/airlines/64/" + aircodeO + ".png";
+                Log.e(LOG_TAG, "position of the urls below: " + position);
+                Log.e(LOG_TAG, "airURLout from trip adapter: " + airUrlO);
+
+                //todo: add into report -- Picasso
+                //how to work with Picasso - https://futurestud.io/tutorials/picasso-adapter-use-for-listview-gridview-etc
+                Picasso
+                        .with(context)
+                        .load(airUrlO)
+                        .fit()
+                        .into(outLogoView);
 
                 TextView outDepAirportView = (TextView) listItemView.findViewById(R.id.out_dep_airport_code);
                 outDepAirportView.setText(outbound.getDepAirportCode());
@@ -140,8 +173,16 @@ public class TripAdapter extends ArrayAdapter<Trip> {
             }
 
             if(returnn != null) {
-                TextView retLogoView = (TextView) listItemView.findViewById(R.id.ret_airline);
-                retLogoView.setText(String.valueOf(returnn.getAirlineCode()));
+                retLogoView = (ImageView) listItemView.findViewById(R.id.ret_airline);
+                String aircodeR = String.valueOf(returnn.getAirlineCode());
+                airUrlR = "https://images.kiwi.com/airlines/64/" + aircodeR + ".png";
+                Log.e(LOG_TAG, "airURLret from trip adapter: " + airUrlR);
+                //loaderMngr.initLoader(position+2000, null, logosR);
+                Picasso
+                        .with(context)
+                        .load(airUrlR)
+                        .fit()
+                        .into(retLogoView);
 
                 TextView retDepAirportView = (TextView) listItemView.findViewById(R.id.ret_dep_airport_code);
                 retDepAirportView.setText(returnn.getDepAirportCode());
@@ -167,6 +208,9 @@ public class TripAdapter extends ArrayAdapter<Trip> {
                 //if it's one way flight, hide the second part of the xml layout
                 View layout = listItemView.findViewById(R.id.return_flight);
                 layout.setVisibility(View.GONE);
+                View layoutOut = listItemView.findViewById(R.id.outbound_flight);
+                layoutOut.setPadding(0,0,0,7);
+
             }
 
             return listItemView;

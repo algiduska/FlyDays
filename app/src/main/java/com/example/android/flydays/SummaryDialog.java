@@ -2,9 +2,6 @@ package com.example.android.flydays;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.LoaderManager;
-//import android.support.v4.app.LoaderManager;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,6 +23,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,6 +59,8 @@ public class SummaryDialog extends AppCompatDialogFragment {
 
     private String airlineO;
     private String airlineR;
+    private String airlineCodeO;
+    private String airlineCodeR;
     private TextView airlineV;
     private TextView airline2V;
     private ImageView pic;
@@ -67,61 +68,9 @@ public class SummaryDialog extends AppCompatDialogFragment {
     private ImageView airlineLogo2;
 
     private String imageCityUrl;
-    private String airlineOutUrl;
-    private String airlineRetUrl;
+    private String airlineUrlO;
+    private String airlineUrlR;
 
-    ImageLoader bitLoader;
-
-
-    private final int CITY_LOADER_ID = 101;
-    private final int LOGO_OUT_LOADER_ID = 102;
-    private final int LOGO_RET_LOADER_ID = 103;
-
-
-    //loaderCallbacks -- for some reason they need to be in support library, there is no other way
-    // to get android.app.LoaderManager (which is also deprecated for the support library)
-    /**
-     * LoaderCallbacks to get images. Loader is initialised on LoaderManager where Loader ID has specific meaning.
-     * Based on this meaning different views will be updated.
-     */
-    android.support.v4.app.LoaderManager.LoaderCallbacks<Bitmap> images = new android.support.v4.app.LoaderManager.LoaderCallbacks<Bitmap>() {
-        @Override
-        public android.support.v4.content.Loader<Bitmap> onCreateLoader(int i, Bundle bundle) {
-
-            switch (i){
-                case CITY_LOADER_ID:
-                    bitLoader = new ImageLoader(context,imageCityUrl);
-                    break;
-                case LOGO_OUT_LOADER_ID:
-                    bitLoader = new ImageLoader(context,airlineOutUrl);
-                    break;
-                case LOGO_RET_LOADER_ID:
-                    bitLoader = new ImageLoader(context,airlineRetUrl);
-                    break;
-            }
-
-            return bitLoader;
-        }
-
-        @Override
-        public void onLoadFinished(android.support.v4.content.Loader<Bitmap> loader, Bitmap bitmap) {
-            switch(loader.getId()){
-                case CITY_LOADER_ID:
-                    pic.setImageBitmap(bitmap);
-                    break;
-                case LOGO_OUT_LOADER_ID:
-                    airlineLogo.setImageBitmap(bitmap);
-                    break;
-                case LOGO_RET_LOADER_ID:
-                    airlineLogo2.setImageBitmap(bitmap);
-                    break;
-            }
-
-        }
-
-        @Override
-        public void onLoaderReset(android.support.v4.content.Loader<Bitmap> loader) {        }
-    };
 
 
     @Override
@@ -144,7 +93,10 @@ public class SummaryDialog extends AppCompatDialogFragment {
 
         String airFromOut = bundle.getString("airFO");
         String airToOut = bundle.getString("airTO");
+        airlineCodeO = bundle.getString("airlineCodeO");
         airlineO = bundle.getString("airlineO");
+        Log.e(LOG_TAG, "Airline outgoing as received through the bundle: " + airlineO);
+
         String durO = bundle.getString("durO");
         String timeDepOut = bundle.getString("timeDO");
         String timeArrOut = bundle.getString("timeAO");
@@ -160,25 +112,27 @@ public class SummaryDialog extends AppCompatDialogFragment {
         String dateDepRet ="";
         String dateArrRet ="";
 
+        airlineUrlO = "https://images.kiwi.com/airlines/64/" + airlineCodeO + ".png";
+        Log.e(LOG_TAG, "Airline outgoing url: " + airlineUrlO);
+
+
         boolean returnn= bundle.getBoolean("return");
 
-        //imageCityUrl = "https://d13k13wj6adfdf.cloudfront.net/urban_areas/amsterdam_web-1cd4b2bf75.jpg";
-
-        android.support.v4.app.LoaderManager loaderManager = getLoaderManager();
-        loaderManager.initLoader(CITY_LOADER_ID, null, images);
-        loaderManager.initLoader(LOGO_OUT_LOADER_ID, null, images);
 
         if (returnn){
             airFromRet = bundle.getString("airFR");
             airToRet = bundle.getString("airTR");
             airlineR = bundle.getString("airlineR");
+            Log.e(LOG_TAG, "Airline return as received through the bundle: " + airlineR);
+            airlineCodeR = bundle.getString("airlineCodeR");
             durR = bundle.getString("durR");
             timeDepRet = bundle.getString("timeDR");
             timeArrRet = bundle.getString("timeAR");
             dateDepRet = bundle.getString("dateDR");
             dateArrRet = bundle.getString("dateAR");
 
-            loaderManager.initLoader(LOGO_RET_LOADER_ID, null, images);
+            airlineUrlR = "https://images.kiwi.com/airlines/64/" + airlineCodeR + ".png";
+            Log.e(LOG_TAG, "Airline return url: " + airlineUrlR);
         }
 
 
@@ -190,7 +144,23 @@ public class SummaryDialog extends AppCompatDialogFragment {
         // Pass null as the parent view because its going in the dialog layout
         View view = inflater.inflate(R.layout.summary_dialog, null);
 
+        //views with pictures on it (one more in returnn)
+        pic = view.findViewById(R.id.city_pic);
+        Picasso
+                .with(context)
+                .load(imageCityUrl)
+                .fit()
+                .into(pic);
 
+        airlineLogo = view.findViewById(R.id.airline_logo);
+        Picasso
+                .with(context)
+                .load(airlineUrlO)
+                .fit()
+                .into(airlineLogo);
+
+
+        //all other views for outgoing flight
         TextView desCityV = view.findViewById(R.id.city);
         desCityV.setText(holCity);
         TextView countryV = view.findViewById(R.id.country);
@@ -223,9 +193,17 @@ public class SummaryDialog extends AppCompatDialogFragment {
         TextView toAirV = view.findViewById(R.id.to_airport);
         toAirV.setText(airToOut);
 
+        //views holding return flight information
         View returnFlightV = view.findViewById(R.id.flight2);
 
         if(returnn){
+            airlineLogo2 = view.findViewById(R.id.airline_logo2);
+            Picasso
+                    .with(context)
+                    .load(airlineUrlR)
+                    .fit()
+                    .into(airlineLogo2);
+
             TextView fromCity2V = view.findViewById(R.id.from_city2);
             fromCity2V.setText(holCity);
             TextView fromAir2V = view.findViewById(R.id.from_airport2);
@@ -254,16 +232,6 @@ public class SummaryDialog extends AppCompatDialogFragment {
             returnFlightV.setVisibility(View.GONE);
         }
 
-        pic = view.findViewById(R.id.city_pic);
-        airlineLogo = view.findViewById(R.id.airline_logo);
-        airlineLogo2 = view.findViewById(R.id.airline_logo2);
-
-        /*try {
-            pic.setImageBitmap(cityPic);
-            Log.e(LOG_TAG, "cityPic bitmap was set");
-        }catch (Exception e){
-            Log.e(LOG_TAG, "Exception in reading cityPic bitmap", e);
-        }*/
 
         builder.setView(view)
                 // Add action buttons

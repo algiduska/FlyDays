@@ -97,7 +97,7 @@ public class AirlinesCityurlLoader extends AsyncTaskLoader<Map<String,String>> {
 
         switch (getId()){
             case 100:
-                Log.e(LOG_TAG, "we are in case 101 indeed");
+                Log.e(LOG_TAG, "we are in case 100 indeed -- airlines");
                 try {
                     JSONArray airlineArray = new JSONArray(json);
                     for (int x = 0; x < airlineArray.length(); x++) {
@@ -117,7 +117,7 @@ public class AirlinesCityurlLoader extends AsyncTaskLoader<Map<String,String>> {
                 }
                 break;
             case 200:
-                Log.e(LOG_TAG, "we are in case 200 indeed");
+                Log.e(LOG_TAG, "we are in case 200 indeed -- pic URL");
                 try {
                     //documentation for getting city url images: https://developers.teleport.org/api/getting_started/#photos_ua
                     JSONObject baseObject = new JSONObject(json);
@@ -133,9 +133,13 @@ public class AirlinesCityurlLoader extends AsyncTaskLoader<Map<String,String>> {
                         JSONObject photo = photoObject.getJSONObject("image");
                         String imageURL = photo.getString("web");
 
+
                         JSONObject linksObject = currentCity.getJSONObject("_links");
                         JSONObject cityObject = linksObject.getJSONObject("ua:identifying-city");
                         String cityName = cityObject.getString("name");
+
+                        //other way in doing this but then it can't get pics with special characters like Gdańsk.
+                        //String cityName = currentCity.getString("name");
 
 
                         airlinesOrCityurlMap.put(cityName, imageURL);
